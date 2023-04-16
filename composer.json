@@ -1,0 +1,17 @@
+{
+    "name": "zanko-khaledi/php-simple-router",
+    "type": "composer-plugin",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "ZankoKhaledi\\PhpSimpleRouter\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "zanko-khaledi",
+            "email": "zanko.kh75@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
