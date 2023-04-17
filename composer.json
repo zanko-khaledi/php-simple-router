@@ -16,11 +16,9 @@
       "email": "zanko.kh75@gmail.com"
     }
   ],
-  "extra": {
-    "Router": [
-      "ZankoKhaledi\\PhpSimpleRouter\\Router"
-    ]
-  },
+  "extra": [
+    "ZankoKhaledi\\PhpSimpleRouter\\Router"
+  ],
   "minimum-stability": "dev",
   "prefer-stable": true
 }
