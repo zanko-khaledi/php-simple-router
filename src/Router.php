@@ -157,9 +157,4 @@ final class Router implements IRoute
         $this->path = null;
         $this->args = [];
     }
-
-    private function groupCallback(callable $callback):IRoute
-    {
-        return $callback();
-    }
 }
