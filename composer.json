@@ -5,6 +5,9 @@
     "require": {
         "php" : ">= 8.1"
     },
+    "extra": [
+        ""
+    ],
     "autoload": {
         "psr-4": {
             "ZankoKhaledi\\PhpSimpleRouter\\": "src/"
