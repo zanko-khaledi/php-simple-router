@@ -1,24 +1,24 @@
 {
-    "name": "zanko-khaledi/php-simple-router",
-    "type": "library",
-    "license": "MIT",
-    "require": {
-        "php" : ">= 8.1"
-    },
-    "autoload": {
-        "psr-4": {
-            "ZankoKhaledi\\PhpSimpleRouter\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "zanko-khaledi",
-            "email": "zanko.kh75@gmail.com"
-        }
-    ],
-    "extra": [
-        "ZankoKhaledi\\PhpSimpleRouter\\Router"
-    ],
-    "minimum-stability": "dev",
-    "prefer-stable": true
+  "name": "zanko-khaledi/php-simple-router",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">= 8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "ZankoKhaledi\\PhpSimpleRouter\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "zanko-khaledi",
+      "email": "zanko.kh75@gmail.com"
+    }
+  ],
+  "extra": {
+    "Router": "ZankoKhaledi\\PhpSimpleRouter\\Router"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }
