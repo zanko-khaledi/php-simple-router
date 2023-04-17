@@ -19,4 +19,10 @@ interface IRequest
     public function input(string $key);
 
     public function all();
+
+    public function getHost();
+
+    public function uri();
+
+    public function ip();
 }

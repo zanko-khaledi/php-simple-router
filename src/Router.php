@@ -35,15 +35,16 @@ final class Router implements IRoute
         return $this;
     }
 
+
     /**
      * @param string $prefix
      * @param callable $callback
      * @return void
      */
-    public function group(string $prefix, callable $callback)
+    public function group(string $prefix,callable $callback)
     {
         $this->prefix = $prefix;
-        $callback();
+        $callback($this);
     }
 
 
@@ -54,7 +55,7 @@ final class Router implements IRoute
      * @param string|null $pattern
      * @return void
      */
-    public function addRoute(string $method, mixed $path, string $pattern = null, callable|array $callback)
+    public function addRoute(string $method, mixed $path,callable|array $callback,string $pattern = null)
     {
         if (!in_array($method, $this->validMethods)) {
             throw new \BadMethodCallException("$method not allowed");
@@ -63,6 +64,7 @@ final class Router implements IRoute
         $this->where($pattern);
         $this->checkRequestMethod($method, $this->path, $callback);
     }
+
 
     /**
      * @param string $method
@@ -94,7 +96,6 @@ final class Router implements IRoute
         if ($this->pattern !== null) {
             if ($this->uri === $this->pattern) {
                 $this->determineArguments();
-
                 $this->handleCallbacks($callback);
             }
         } else {
@@ -155,5 +156,10 @@ final class Router implements IRoute
         $this->pattern = null;
         $this->path = null;
         $this->args = [];
+    }
+
+    private function groupCallback(callable $callback):IRoute
+    {
+        return $callback();
     }
 }

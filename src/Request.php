@@ -110,6 +110,30 @@ class Request implements IRequest
     }
 
     /**
+     * @return array|false|int|string|null
+     */
+    public function getHost()
+    {
+        return $this->server()->http_host ?? parse_url($this->server()->request_uri,PHP_URL_HOST);
+    }
+
+    /**
+     * @return array|false|int|string|null
+     */
+    public function uri()
+    {
+        return parse_url($this->server()->request_uri,PHP_URL_PATH);
+    }
+
+    /**
+     * @return string
+     */
+    public function ip()
+    {
+        return gethostbyname($this->getHost());
+    }
+
+    /**
      * @return array|null
      */
     public function __debugInfo(): ?array
