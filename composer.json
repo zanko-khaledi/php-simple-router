@@ -17,7 +17,9 @@
     }
   ],
   "extra": {
-    "Router": "ZankoKhaledi\\PhpSimpleRouter\\Router"
+    "Router": [
+      "ZankoKhaledi\\PhpSimpleRouter\\Router"
+    ]
   },
   "minimum-stability": "dev",
   "prefer-stable": true
