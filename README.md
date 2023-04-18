@@ -1,6 +1,6 @@
 # php-simple-router
 
-this light weight router library can be useful for pure php web projects.
+this light weight router library can be useful for small php web projects or building you'r api.
 
 
 ##installation 
