@@ -3,7 +3,7 @@
 this light weight router library can be useful for pure php web projects.
 
 
-###installation 
+##installation 
 
     composer require zanko-khaledi/php-simple-router:^1.0.0
 
