@@ -41,7 +41,7 @@ final class Router implements IRoute
      * @param callable $callback
      * @return void
      */
-    public function group(string $prefix,callable $callback)
+    public function group(string $prefix, callable $callback)
     {
         $this->prefix = $prefix;
         $callback($this);
@@ -55,10 +55,10 @@ final class Router implements IRoute
      * @param string|null $pattern
      * @return void
      */
-    public function addRoute(string $method, mixed $path,callable|array $callback,string $pattern = null)
+    public function addRoute(string $method, mixed $path, callable|array $callback, string $pattern = null)
     {
         if (!in_array($method, $this->validMethods)) {
-            throw new \BadMethodCallException("$method not allowed");
+            throw new \BadMethodCallException("$method not allowed.");
         }
         $this->path = $this->prefix . $path;
         $this->where($pattern);
@@ -74,15 +74,8 @@ final class Router implements IRoute
      */
     private function checkRequestMethod(string $method, string $path, callable|array $callback)
     {
-        if ($method === $_SERVER['REQUEST_METHOD']) {
-            match ($method) {
-                'GET' => $this->handleRoute($path, $callback),
-                'POST' => $this->handleRoute($path, $callback),
-                'PUT' => $this->handleRoute($path, $callback),
-                'PATCH' => $this->handleRoute($path, $callback),
-                'DELETE' => $this->handleRoute($path, $callback),
-                default => $this->handleRoute($path, $callback)
-            };
+        if ($method === $_SERVER['REQUEST_METHOD'] && in_array($method, $this->validMethods)) {
+            $this->handleRoute($path, $callback);
         }
     }
 
