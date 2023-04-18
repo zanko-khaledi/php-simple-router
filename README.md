@@ -1,5 +1,11 @@
 # php-simple-router
 
+this light weight router library can be useful for pure php web projects.
+
+
+###installation 
+
+    composer require zanko-khaledi/php-simple-router:^1.0.0
 
 You can use this router like below  
     
@@ -64,6 +70,7 @@ You can use prefix and group methods too
             echo $request->params()->id;
         },'/bar\/[0-9]+/');
     });
+
     
 
    

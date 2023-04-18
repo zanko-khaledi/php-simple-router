@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace ZankoKhaledi\PhpSimpleRouter;
 
@@ -99,12 +100,12 @@ class Request implements IRequest
      */
     public function all()
     {
-        return match ($this->server()->request_method){
+        return match ($this->server()->request_method) {
             'GET' => $this->query(),
             'POST' => (object)$_POST,
-            'PUT'  => json_decode(file_get_contents("php://input"),false),
-            'PATCH' => json_decode(file_get_contents("php://input"),false),
-            'DELETE' => json_decode(file_get_contents("php://input"),false),
+            'PUT' => json_decode(file_get_contents("php://input"), false),
+            'PATCH' => json_decode(file_get_contents("php://input"), false),
+            'DELETE' => json_decode(file_get_contents("php://input"), false),
             default => $this->query()
         };
     }
@@ -114,7 +115,7 @@ class Request implements IRequest
      */
     public function getHost()
     {
-        return $this->server()->http_host ?? parse_url($this->server()->request_uri,PHP_URL_HOST);
+        return $this->server()->http_host ?? parse_url($this->server()->request_uri, PHP_URL_HOST);
     }
 
     /**
@@ -122,7 +123,7 @@ class Request implements IRequest
      */
     public function uri()
     {
-        return parse_url($this->server()->request_uri,PHP_URL_PATH);
+        return parse_url($this->server()->request_uri, PHP_URL_PATH);
     }
 
     /**
