@@ -68,7 +68,7 @@ You can use prefix and group methods too
     $router->group('/bar',function(IRoute $router){
         $router->addRoute('GET','/id',function(Request $request){
             echo $request->params()->id;
-        },'/foo\/[0-9]+/');
+        },'/bar\/[0-9]+/');
     });
 
     
