@@ -1,6 +1,5 @@
 {
   "name": "zanko-khaledi/php-simple-router",
-  "type": "library",
   "license": "MIT",
   "require": {
     "php": ">= 8.1"
@@ -15,9 +14,6 @@
       "name": "zanko-khaledi",
       "email": "zanko.kh75@gmail.com"
     }
-  ],
-  "extra": [
-    "ZankoKhaledi\\PhpSimpleRouter\\Router"
   ],
   "minimum-stability": "dev",
   "prefer-stable": true
