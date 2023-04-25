@@ -4,9 +4,10 @@ declare(strict_types=1);
 namespace ZankoKhaledi\PhpSimpleRouter;
 
 
+use ZankoKhaledi\PhpSimpleRouter\Abstracts\BaseRoute;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
 
-final class Router implements IRoute
+final class Router extends BaseRoute implements IRoute
 {
     private ?string $prefix = null;
     private ?string $pattern = null;
@@ -35,6 +36,15 @@ final class Router implements IRoute
         return $this;
     }
 
+    /**
+     * @param string $name
+     * @return IRoute
+     */
+    public function name(string $name): IRoute
+    {
+        $this->name = $name;
+        return $this;
+    }
 
     /**
      * @param string $prefix
@@ -60,7 +70,18 @@ final class Router implements IRoute
         if (!in_array($method, $this->validMethods)) {
             throw new \BadMethodCallException("$method not allowed.");
         }
+
         $this->path = $this->prefix . $path;
+
+        foreach (static::getRoutes() as $name => $route) {
+            if ($this->path === $route) {
+                throw new \Exception("$route added before.");
+            }
+        }
+
+        $this->name !== null ?
+            $this->setRoute($this->name, $this->path) : static::$routes[] = $path;
+        $this->name = null;
         $this->where($pattern);
         $this->checkRequestMethod($method, $this->path, $callback);
     }
@@ -90,10 +111,14 @@ final class Router implements IRoute
             if ($this->uri === $this->pattern) {
                 $this->determineArguments();
                 $this->handleCallbacks($callback);
+            }else{
+                http_response_code(404);
             }
         } else {
             if ($path === $this->uri) {
                 $this->handleCallbacks($callback);
+            }else{
+                http_response_code(404);
             }
         }
     }
@@ -139,6 +164,7 @@ final class Router implements IRoute
         $pathDiff = array_keys(array_flip(array_diff($pathArray, $uriArray)));
         $this->args = array_combine($pathDiff, $uriDiff);
     }
+
 
     /**
      *
