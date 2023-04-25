@@ -7,6 +7,8 @@ namespace ZankoKhaledi\PhpSimpleRouter;
 use ZankoKhaledi\PhpSimpleRouter\Abstracts\BaseRoute;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
 
+
+
 final class Router extends BaseRoute implements IRoute
 {
     private ?string $prefix = null;
@@ -111,14 +113,10 @@ final class Router extends BaseRoute implements IRoute
             if ($this->uri === $this->pattern) {
                 $this->determineArguments();
                 $this->handleCallbacks($callback);
-            }else{
-                http_response_code(404);
             }
         } else {
             if ($path === $this->uri) {
                 $this->handleCallbacks($callback);
-            }else{
-                http_response_code(404);
             }
         }
     }

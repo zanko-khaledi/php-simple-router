@@ -8,6 +8,11 @@ use ZankoKhaledi\PhpSimpleRouter\Interfaces\ICollection;
 
 class RouterCollection implements ICollection
 {
+    /**
+     * @param string $path
+     * @return void
+     * @throws \Exception
+     */
     public function loadRoutesFrom(string $path)
     {
         $routes = glob($path);
@@ -22,6 +27,11 @@ class RouterCollection implements ICollection
         }
     }
 
+    /**
+     * @param string $path
+     * @return void
+     * @throws \Exception
+     */
     public function loadRouteFrom(string $path)
     {
         if (file_exists($path)) {
