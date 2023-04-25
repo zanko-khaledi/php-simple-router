@@ -71,7 +71,28 @@ You can use prefix and group methods too
         },'/bar\/[0-9]+/');
     });
 
+Add router collection for modular routing 
+
+    <?php
     
+    use ZankoKhaledi\PhpSimpleRouter\RouterCollection;
+
+    require __DIR__."/vendor/autoload.php"; 
+
+    $routeCollection = new RouterCollection();
+
+    try {
+
+      $routeCollection->loadRoutesFrom("./routes/*.php");
+
+    } catch (Exception $e) {
+       echo $e->getMessage();
+    }
+
+Or if you want add routes separately you can do like this:
+  
+
+    $routeCollection->loadRouteFrom("./routes/test.php");
 
    
    
