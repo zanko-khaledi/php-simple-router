@@ -2,7 +2,9 @@
   "name": "zanko-khaledi/php-simple-router",
   "license": "MIT",
   "require": {
-    "php": ">= 8.1"
+    "php": ">= 8.1",
+    "guzzlehttp/guzzle": "7.0",
+    "phpunit/phpunit" : "9.*"
   },
   "autoload": {
     "psr-4": {

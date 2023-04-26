@@ -6,11 +6,14 @@ namespace ZankoKhaledi\PhpSimpleRouter;
 
 use ZankoKhaledi\PhpSimpleRouter\Abstracts\BaseRoute;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
-
+use ZankoKhaledi\PhpSimpleRouter\Traits\Testable;
 
 
 final class Router extends BaseRoute implements IRoute
 {
+
+    use Testable;
+
     private ?string $prefix = null;
     private ?string $pattern = null;
     private array $args = [];
@@ -20,12 +23,15 @@ final class Router extends BaseRoute implements IRoute
         'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
     ];
 
+    private ?string $serverMode = null;
+
     /**
      *
      */
     public function __construct()
     {
-        $this->uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $this->serverMode = php_sapi_name();
+        $this->uri = $this->serverMode === 'cli-server' ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : null;
     }
 
     /**
@@ -74,12 +80,6 @@ final class Router extends BaseRoute implements IRoute
         }
 
         $this->path = $this->prefix . $path;
-
-        foreach (static::getRoutes() as $name => $route) {
-            if ($this->path === $route) {
-                throw new \Exception("$route added before.");
-            }
-        }
 
         $this->name !== null ?
             $this->setRoute($this->name, $this->path) : static::$routes[] = $path;
