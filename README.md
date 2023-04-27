@@ -144,7 +144,7 @@ You can use only this request methods to handle you're api
             }
         
         
-            public function test_zanko_post()
+            public function test_foo_post_route()
             {
                 $request = Router::assertRequest($this->baseUri);
                 $response = $request->assertPost('/foo',[
