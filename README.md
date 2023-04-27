@@ -2,13 +2,17 @@
 
 this light weight router library can be useful for small php web projects or building you'r api.
 
+## installation
 
-##installation 
+```bash
+composer require zanko-khaledi/php-simple-router:^1.0.0
+```
 
-    composer require zanko-khaledi/php-simple-router:^1.0.0
+## Usage
 
-You can use this router like below  
-    
+You can use this router like below
+
+   ```php
     <?php
 
     use ZankoKhaledi\PhpSimpleRouter\Request;
@@ -20,11 +24,13 @@ You can use this router like below
     
     $router->addRoute('GET','/',function(Request $request){
        echo 'Hello World';
-    });
+    })->serve();
+   ```
 
-Use Controller instead of callback functions 
+Use Controller instead of callback functions
 
-    <?php
+  ```php
+   <?php
 
     use App\Controllers\FooController 
     use ZankoKhaledi\PhpSimpleRouter\Router;
@@ -32,10 +38,12 @@ Use Controller instead of callback functions
     require __DIR__ . "/vendor/autoload.php";
 
     $router = new Router();
-    $router->addRoute('POST','/foo',[FooController::class,'store']);
+    $router->addRoute('POST','/foo',[FooController::class,'store'])->serve();
+  ```
 
 However you would be able to use dynamic route parameters with regex pattern
 
+   ```php
     <?php
     
     use ZankoKhaledi\PhpSimpleRouter\Request; 
@@ -47,11 +55,13 @@ However you would be able to use dynamic route parameters with regex pattern
     
     $router->addRoute('GET','/foo/id',function(Request $request){
        echo $request->params()->id;
-    },'/foo\/[0-9]+/'); 
-     
+    })->where('/foo\/[0-9]+/')->serve();
+   ```
+
 You can use prefix and group methods too
-   
-    <?php
+
+   ```php
+   <?php
     
     use ZankoKhaledi\PhpSimpleRouter\Request; 
     use ZankoKhaledi\PhpSimpleRouter\Router;
@@ -63,17 +73,19 @@ You can use prefix and group methods too
     
     $router->prefix('/foo')->addRoute('GET','/id',function(Request $reqeust){
        echo $request->params()->id;
-    },'/foo\/[0-9]+/');
+    })->where('/foo\/[0-9]+/')->serve();
  
     $router->group('/bar',function(IRoute $router){
         $router->addRoute('GET','/id',function(Request $request){
             echo $request->params()->id;
-        },'/bar\/[0-9]+/');
+        })->where('/bar\/[0-9]+/')->serve();
     });
+   ```
 
-Add router collection for modular routing 
+Add router collection for modular routing
 
-    <?php
+   ```php
+   <?php
     
     use ZankoKhaledi\PhpSimpleRouter\RouterCollection;
 
@@ -88,11 +100,100 @@ Add router collection for modular routing
     } catch (Exception $e) {
        echo $e->getMessage();
     }
+   ```
 
 Or if you want add routes separately you can do like this:
-  
 
-    $routeCollection->loadRouteFrom("./routes/test.php");
+   ```php
+      $routeCollection->loadRouteFrom("./routes/test.php");
+   ```
 
+## Request methods
+
+You can use only this request methods to handle you're api
+
+ ```bash 
+    GET,POST,PUT,PATCH,DELETE
+ ``` 
+
+## Testing
+
+   ```php
+   <?php
+        
+        declare(strict_types=1);
+        
+        use PHPUnit\Framework\TestCase;
+        use ZankoKhaledi\PhpSimpleRouter\Router;
+        
+        class Test extends TestCase
+        {
+        
+            protected string $baseUri = 'http://localhost:8000';
+        
+            public function test_get_route()
+            {
+                $request = Router::assertRequest($this->baseUri);
+                $response = $request->assertGet('/foo',[]);
+        
+                $this->assertEquals(200,$response->status());
+                $this->assertJson($response->json());
+                $this->assertSame(json_encode([
+                    'name' => 'Zanko'
+                ]),$response->body());
+            }
+        
+        
+            public function test_zanko_post()
+            {
+                $request = Router::assertRequest($this->baseUri);
+                $response = $request->assertPost('/foo',[
+                   'form_params' => [
+                       'name' => 'Teddy'
+                   ]
+                ]);
+        
+                $this->assertEquals(201,$response->status());
+                $this->assertJson($response->json());
+                $this->assertSame(json_encode([
+                    'name' => 'Foo'
+                ]),$response->json());
+            }
+        }   
+       
+   ```
+
+   You can test you're api like code block above.
+   some test api : 
+```php
+  <?php
+    
+    use ZankoKhaledi\PhpSimpleRouter\Router;
+    
+    $baseUri = 'http://localhost:8000';
+    $request = Router::assertRequest($baseUri) // config base uri for sending requests to server 
+    
+    $request->assertGet($route,[]); // route like /foo
+ 
+    $request->assertPost($route,[]);
+
+    $request->assertPut($route,[]);
+
+    $request->assertPatch($route,[]);
+
+    $request->assertDelete($route,[]);
+```        
    
-   
+if you familiar to PHPUnit test framework and Guzzle/Http library you could test you're api 
+without Router test api by default.
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
+
+Please make sure to update tests as appropriate.
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)

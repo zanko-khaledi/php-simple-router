@@ -15,7 +15,10 @@ final class Router extends BaseRoute implements IRoute
     use Testable;
 
     private ?string $prefix = null;
+    private ?string $matchedUri = null;
     private ?string $pattern = null;
+    private ?string $method = 'GET';
+    private mixed $callback = null;
     private array $args = [];
     private ?string $path = null;
     private ?string $uri = null;
@@ -23,7 +26,7 @@ final class Router extends BaseRoute implements IRoute
         'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
     ];
 
-    private ?string $serverMode = null;
+    private ?string $serverMode;
 
     /**
      *
@@ -32,6 +35,17 @@ final class Router extends BaseRoute implements IRoute
     {
         $this->serverMode = php_sapi_name();
         $this->uri = $this->serverMode === 'cli-server' ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : null;
+    }
+
+    /**
+     * @param string $prefix
+     * @param callable $callback
+     * @return void
+     */
+    public function group(string $prefix, callable $callback)
+    {
+        $this->prefix = $prefix;
+        $callback($this);
     }
 
     /**
@@ -54,40 +68,54 @@ final class Router extends BaseRoute implements IRoute
         return $this;
     }
 
-    /**
-     * @param string $prefix
-     * @param callable $callback
-     * @return void
-     */
-    public function group(string $prefix, callable $callback)
-    {
-        $this->prefix = $prefix;
-        $callback($this);
-    }
 
+    /**
+     * @param string|null $pattern
+     * @return IRoute
+     */
+    public function where(string $pattern = null): IRoute
+    {
+        $this->pattern = $pattern;
+        if ($this->pattern !== null) {
+            preg_match($this->pattern, $this->uri, $matches);
+            if (count($matches) > 0) {
+                $this->matchedUri = '/' . $matches[0];
+            } else {
+                $this->matchedUri = null;
+            }
+        }
+
+        return $this;
+    }
 
     /**
      * @param string $method
      * @param mixed $path
      * @param callable|array $callback
-     * @param string|null $pattern
-     * @return void
+     * @return IRoute
      */
-    public function addRoute(string $method, mixed $path, callable|array $callback, string $pattern = null)
+    public function addRoute(string $method, mixed $path, callable|array $callback): IRoute
     {
         if (!in_array($method, $this->validMethods)) {
             throw new \BadMethodCallException("$method not allowed.");
         }
 
         $this->path = $this->prefix . $path;
+        $this->method = $method;
+        $this->callback = $callback;
 
-        $this->name !== null ?
-            $this->setRoute($this->name, $this->path) : static::$routes[] = $path;
-        $this->name = null;
-        $this->where($pattern);
-        $this->checkRequestMethod($method, $this->path, $callback);
+
+        return $this;
     }
 
+    /**
+     * @return void
+     */
+    public function serve()
+    {
+        $this->setRoute($this->name, $this->method, $this->path, $this->pattern, $this->callback);
+        $this->checkRequestMethod($this->method, $this->path, $this->callback);
+    }
 
     /**
      * @param string $method
@@ -102,6 +130,7 @@ final class Router extends BaseRoute implements IRoute
         }
     }
 
+
     /**
      * @param string $path
      * @param array|callable $callback
@@ -109,8 +138,8 @@ final class Router extends BaseRoute implements IRoute
      */
     private function handleRoute(string $path, array|callable $callback)
     {
-        if ($this->pattern !== null) {
-            if ($this->uri === $this->pattern) {
+        if ($this->matchedUri !== null) {
+            if ($this->uri === $this->matchedUri && $this->checkPath()) {
                 $this->determineArguments();
                 $this->handleCallbacks($callback);
             }
@@ -136,22 +165,6 @@ final class Router extends BaseRoute implements IRoute
     }
 
     /**
-     * @param string|null $pattern
-     * @return void
-     */
-    private function where(string $pattern = null)
-    {
-        if ($pattern !== null) {
-            preg_match($pattern, $this->uri, $matches);
-            if (count($matches) > 0) {
-                $this->pattern = '/' . $matches[0];
-            } else {
-                $this->pattern = null;
-            }
-        }
-    }
-
-    /**
      * @return void
      */
     private function determineArguments()
@@ -163,10 +176,24 @@ final class Router extends BaseRoute implements IRoute
         $this->args = array_combine($pathDiff, $uriDiff);
     }
 
-
     /**
-     *
+     * @return bool
      */
+    private function checkPath(): bool
+    {
+        $pathArray = explode('/', $this->path);
+        $uriArray = explode('/', $this->uri);
+
+        $intersect = array_intersect($pathArray, $uriArray);
+        $filteredUri = [];
+        foreach (array_diff($uriArray, $pathArray) as $index => $item) {
+            $filteredUri = array_filter([...$uriArray], fn($i) => $i !== $item);
+        }
+
+        return implode('/', $intersect) === implode('/', $filteredUri);
+    }
+
+
     public function __destruct()
     {
         $this->prefix = null;

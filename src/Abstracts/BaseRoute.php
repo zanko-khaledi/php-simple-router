@@ -10,12 +10,29 @@ abstract class BaseRoute
 
     /**
      * @param string|null $name
+     * @param string $method
      * @param string $path
+     * @param string|null $pattern
+     * @param callable|array $callback
      * @return void
      */
-    public function setRoute(?string $name, string $path)
+    public function setRoute(?string $name, string $method, string $path, ?string $pattern, callable|array $callback)
     {
-        static::$routes[$name] = $path;
+        if (!is_null($name)) {
+            static::$routes[$name] = [
+                "method" => $method,
+                "path" => $path,
+                "pattern" => $pattern,
+                "callback" => $callback
+            ];
+        } else {
+            static::$routes[] = [
+                "method" => $method,
+                "path" => $path,
+                "pattern" => $pattern,
+                "callback" => $callback
+            ];
+        }
     }
 
     /**
@@ -28,11 +45,11 @@ abstract class BaseRoute
 
     /**
      * @param string $name
-     * @return string|null
+     * @return array|null
      */
-    public static function route(string $name): ?string
+    public static function route(string $name): ?object
     {
-        return static::$routes[$name];
+        return (object)static::$routes[$name];
     }
 
     /**
