@@ -187,9 +187,7 @@ final class Router extends BaseRoute implements IRoute
         $intersect = array_intersect($pathArray, $uriArray);
         $filteredUri = [];
         foreach (array_diff($uriArray, $pathArray) as $index => $item) {
-            $filteredUri = array_filter([...$uriArray], function ($i) use ($item) {
-                return $i !== $item;
-            });
+            $filteredUri = array_filter([...$uriArray], fn($i) => $i !== $item);
         }
 
         return implode('/', $intersect) === implode('/', $filteredUri);
