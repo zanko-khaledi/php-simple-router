@@ -6,6 +6,13 @@
     "guzzlehttp/guzzle": "7.0",
     "phpunit/phpunit" : "9.*"
   },
+  "keywords": [
+    "php",
+    "router",
+    "php-simple-router",
+    "route-middleware",
+    "php-router"
+  ],
   "autoload": {
     "psr-4": {
       "ZankoKhaledi\\PhpSimpleRouter\\": "src/"
