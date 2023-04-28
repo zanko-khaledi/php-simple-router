@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace ZankoKhaledi\PhpSimpleRouter\Traits;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 
 trait Testable
@@ -14,7 +13,7 @@ trait Testable
     private mixed $responseData;
     private int $size;
     private array $headers;
-    private ?Client $request = null;
+    private ?Client $http = null;
 
 
     /**
@@ -35,7 +34,7 @@ trait Testable
     public static function assertRequest(string $baseUri): static
     {
         $instance = (new static());
-        $instance->request = new Client([
+        $instance->http = new Client([
             "base_uri" => $baseUri
         ]);
         return $instance;
@@ -104,7 +103,7 @@ trait Testable
      */
     private function sendAsyncRequest(string $method, string $route, array $params)
     {
-        $promise = $this->request->{strtolower($method).'Async'}($route,$params)->then(function (Response $response){
+        $promise = $this->http->{strtolower($method).'Async'}($route,$params)->then(function (Response $response){
             $this->responseData = $response->getBody()->getContents();
             $this->statusCode = $response->getStatusCode();
             $this->headers = $response->getHeaders();
