@@ -22,7 +22,13 @@ interface IRequest
 
     public function getHost();
 
+    public function getProtocol();
+
     public function uri();
 
     public function ip();
+
+    public function session(string $key = null);
+
+    public function cookie(string $key = null);
 }

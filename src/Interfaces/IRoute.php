@@ -8,7 +8,7 @@ interface IRoute
 
     public function where(string $pattern):IRoute;
 
-    public function name(string $name):IRoute;
+    public function middleware(array $middlewares):IRoute;
 
     public function serve();
 }

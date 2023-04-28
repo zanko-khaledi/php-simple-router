@@ -5,6 +5,8 @@ namespace ZankoKhaledi\PhpSimpleRouter;
 
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRequest;
 
+session_start();
+
 class Request implements IRequest
 {
     private ?object $server = null;
@@ -111,6 +113,26 @@ class Request implements IRequest
     }
 
     /**
+     * @return string
+     */
+    public function getProtocol(): string
+    {
+        $protocol = null;
+
+        if (stripos($_SERVER['SERVER_PROTOCOL'], 'https') === 0) {
+            $protocol = 'https';
+        }
+        if (stripos($_SERVER['SERVER_PROTOCOL'], 'http') === 0) {
+            $protocol = 'http';
+        }
+        if (stripos($_SERVER['SERVER_PROTOCOL'], 'ftp') === 0) {
+            $protocol = 'ftp';
+        }
+
+        return $protocol ?? $_SERVER['SERVER_PROTOCOL'];
+    }
+
+    /**
      * @return array|false|int|string|null
      */
     public function getHost()
@@ -133,6 +155,31 @@ class Request implements IRequest
     {
         return gethostbyname($this->getHost());
     }
+
+    /**
+     * @param string|null $key
+     * @return array|mixed
+     */
+    public function session(string $key = null): mixed
+    {
+        if(!isset($_SESSION[$key])){
+            return null;
+        }
+        return $_SESSION[$key];
+    }
+
+    /**
+     * @param string|null $key
+     * @return array|mixed
+     */
+    public function cookie(string $key = null): mixed
+    {
+        if(!isset($_COOKIE[$key])){
+            return null;
+        }
+        return $_COOKIE[$key];
+    }
+
 
     /**
      * @return array|null

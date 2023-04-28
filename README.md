@@ -115,6 +115,42 @@ You can use only this request methods to handle you're api
  ```bash 
     GET,POST,PUT,PATCH,DELETE
  ``` 
+## Middleware
+
+Create a class for example AuthMiddleware that implements IMiddleware contract
+
+```php
+<?php
+
+ use use ZankoKhaledi\PhpSimpleRouter\Interfaces\IMiddleware;
+ use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRequest;
+  
+ class AuthMiddleware implements IMiddleware
+ {
+   public function handle(IRequest $request)
+   {
+     if(!isset($_SESSION['admin']) && $_SESSION['admin'] !== 'zanko'){
+           header("Location:/");
+           exit();
+     }
+   }
+ }
+```
+After middleware has been created you should register it on you're router
+
+```php
+<?php
+  
+  $router = new \ZankoKhaledi\PhpSimpleRouter\Router();
+  
+  $router->addRoute('GET','/',function (\ZankoKhaledi\PhpSimpleRouter\Request $request){
+      echo "Root path";
+  })->serve();
+  
+  $router->addRoute('GET','/foo',function (\ZankoKhaledi\PhpSimpleRouter\Request $request){
+     echo "Hello foo router";
+  })->middleware([AuthMiddleware::class])->serve(); 
+```
 
 ## Testing
 

@@ -5,11 +5,12 @@ namespace ZankoKhaledi\PhpSimpleRouter;
 
 
 use ZankoKhaledi\PhpSimpleRouter\Abstracts\BaseRoute;
+use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRequest;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
 use ZankoKhaledi\PhpSimpleRouter\Traits\Testable;
 
 
-final class Router extends BaseRoute implements IRoute
+final class Router  implements IRoute
 {
 
     use Testable;
@@ -27,7 +28,8 @@ final class Router extends BaseRoute implements IRoute
     ];
 
     private ?string $serverMode;
-
+    private ?Request $request = null;
+    private ?array $middlewares = [];
     /**
      *
      */
@@ -58,13 +60,14 @@ final class Router extends BaseRoute implements IRoute
         return $this;
     }
 
+
     /**
-     * @param string $name
+     * @param array $middlewares
      * @return IRoute
      */
-    public function name(string $name): IRoute
+    public function middleware(array $middlewares): IRoute
     {
-        $this->name = $name;
+        $this->middlewares = [...$middlewares];
         return $this;
     }
 
@@ -97,6 +100,7 @@ final class Router extends BaseRoute implements IRoute
     public function addRoute(string $method, mixed $path, callable|array $callback): IRoute
     {
         if (!in_array($method, $this->validMethods)) {
+            http_response_code(405);
             throw new \BadMethodCallException("$method not allowed.");
         }
 
@@ -113,7 +117,6 @@ final class Router extends BaseRoute implements IRoute
      */
     public function serve()
     {
-        $this->setRoute($this->name, $this->method, $this->path, $this->pattern, $this->callback);
         $this->checkRequestMethod($this->method, $this->path, $this->callback);
     }
 
@@ -156,11 +159,17 @@ final class Router extends BaseRoute implements IRoute
      */
     private function handleCallbacks(callable|array $callback)
     {
+        $this->request = new Request($this->args);
+
+        foreach ($this->middlewares as $middleware){
+            (new $middleware)->handle($this->request);
+        }
+
         if (is_callable($callback)) {
-            $callback(new Request($this->args));
+            $callback($this->request);
         }
         if (is_array($callback)) {
-            call_user_func_array([new $callback[0], $callback[1]], [new Request($this->args)]);
+            call_user_func_array([new $callback[0], $callback[1]], [$this->request]);
         }
     }
 
