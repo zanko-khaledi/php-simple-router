@@ -83,7 +83,7 @@ You can use prefix and group methods too
     
     $router->prefix('/foo')->addRoute('GET','/{id}',function(Request $reqeust){
        echo $request->params()->id;
-    })->where('/foo\/[0-9]+/')->serve();
+    })->where('/foo\/[0-9]+/');
  
     $router->group('/bar',function(IRoute $router){
         $router->addRoute('GET','/{id}',function(Request $request){
