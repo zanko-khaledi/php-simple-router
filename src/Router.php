@@ -3,14 +3,11 @@ declare(strict_types=1);
 
 namespace ZankoKhaledi\PhpSimpleRouter;
 
-
-use ZankoKhaledi\PhpSimpleRouter\Abstracts\BaseRoute;
-use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRequest;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
 use ZankoKhaledi\PhpSimpleRouter\Traits\Testable;
 
 
-final class Router  implements IRoute
+final class Router implements IRoute
 {
 
     use Testable;
@@ -29,7 +26,8 @@ final class Router  implements IRoute
 
     private ?string $serverMode;
     private ?Request $request = null;
-    private ?array $middlewares = [];
+    private ?array $routes = [];
+
     /**
      *
      */
@@ -67,24 +65,25 @@ final class Router  implements IRoute
      */
     public function middleware(array $middlewares): IRoute
     {
-        $this->middlewares = [...$middlewares];
+        foreach ($this->routes as $index => $route) {
+            if ($this->routes[$index]['path'] === $this->path) {
+                $this->routes[$index]['middlewares'] = [...$middlewares];
+            }
+        }
         return $this;
     }
 
-
     /**
-     * @param string|null $pattern
+     * @param string $pattern
      * @return IRoute
      */
-    public function where(string $pattern = null): IRoute
+    public function where(string $pattern): IRoute
     {
-        $this->pattern = $pattern;
-        if ($this->pattern !== null) {
-            preg_match($this->pattern, $this->uri, $matches);
-            if (count($matches) > 0) {
-                $this->matchedUri = '/' . $matches[0];
-            } else {
-                $this->matchedUri = null;
+        preg_match($pattern, $this->uri, $matches);
+
+        foreach ($this->routes as $index => $route) {
+            if ($route['path'] === $this->path) {
+                $this->routes[$index]['valid'] = count($matches) > 0;
             }
         }
 
@@ -96,6 +95,7 @@ final class Router  implements IRoute
      * @param mixed $path
      * @param callable|array $callback
      * @return IRoute
+     * @throws \Exception
      */
     public function addRoute(string $method, mixed $path, callable|array $callback): IRoute
     {
@@ -108,98 +108,105 @@ final class Router  implements IRoute
         $this->method = $method;
         $this->callback = $callback;
 
+        foreach ($this->routes as $index => $route) {
+            if ($this->routes[$index]['path'] === $this->path) {
+                throw new \Exception("$path added before.");
+            }
+        }
+
+        $this->routes[] = [
+            'method' => $method,
+            'path' => $this->path,
+            'callback' => $callback,
+            'middlewares' => [],
+            'valid' => true
+        ];
 
         return $this;
     }
+
 
     /**
      * @return void
      */
     public function serve()
     {
-        $this->checkRequestMethod($this->method, $this->path, $this->callback);
+        foreach ($this->routes as $index => $route) {
+            if ($this->handleDynamicRouteParamsAndPath($route['path']) === $this->uri && $route['valid']) {
+                $this->checkRequestMethod($route['method'], $route['callback'], $route['middlewares']);
+            }
+        }
     }
+
 
     /**
      * @param string $method
-     * @param string $path
      * @param callable|array $callback
      * @return void
      */
-    private function checkRequestMethod(string $method, string $path, callable|array $callback)
+    private function checkRequestMethod(string $method, callable|array $callback, array $middlewares)
     {
         if ($method === $_SERVER['REQUEST_METHOD'] && in_array($method, $this->validMethods)) {
-            $this->handleRoute($path, $callback);
+            $this->handleRoute($callback, $middlewares);
         }
     }
 
 
     /**
-     * @param string $path
      * @param array|callable $callback
      * @return void
      */
-    private function handleRoute(string $path, array|callable $callback)
+    private function handleRoute(array|callable $callback, array $middlewares)
     {
-        if ($this->matchedUri !== null) {
-            if ($this->uri === $this->matchedUri && $this->checkPath()) {
-                $this->determineArguments();
-                $this->handleCallbacks($callback);
-            }
-        } else {
-            if ($path === $this->uri) {
-                $this->handleCallbacks($callback);
-            }
+        $this->request = new Request($this->args);
+
+        foreach ($middlewares as $middleware) {
+            (new $middleware)->handle($this->request);
         }
+
+        $this->handleCallback($callback);
     }
+
 
     /**
      * @param callable|array $callback
      * @return void
      */
-    private function handleCallbacks(callable|array $callback)
+    private function handleCallback(callable|array $callback)
     {
-        $this->request = new Request($this->args);
-
-        foreach ($this->middlewares as $middleware){
-            (new $middleware)->handle($this->request);
-        }
-
         if (is_callable($callback)) {
             $callback($this->request);
         }
+
         if (is_array($callback)) {
             call_user_func_array([new $callback[0], $callback[1]], [$this->request]);
         }
     }
 
-    /**
-     * @return void
-     */
-    private function determineArguments()
-    {
-        $uriArray = explode("/", $this->uri);
-        $pathArray = explode("/", $this->path);
-        $uriDiff = array_keys(array_flip(array_diff($uriArray, $pathArray)));
-        $pathDiff = array_keys(array_flip(array_diff($pathArray, $uriArray)));
-        $this->args = array_combine($pathDiff, $uriDiff);
-    }
 
     /**
-     * @return bool
+     * @param string $route
+     * @return string
      */
-    private function checkPath(): bool
+    private function handleDynamicRouteParamsAndPath(string $route): string
     {
-        $pathArray = explode('/', $this->path);
+        $pattern = "/{(.*?)}/";
+        preg_match_all($pattern, $route, $matches);
+
         $uriArray = explode('/', $this->uri);
+        $pathArray = explode('/', $route);
+        $uriDiff = array_diff($uriArray, $pathArray);
+        $path = "";
+        if (count($matches[1]) === count($uriDiff)) {
+            $this->args = [...array_combine($matches[1], $uriDiff)];
 
-        $intersect = array_intersect($pathArray, $uriArray);
-        $filteredUri = [];
-        foreach (array_diff($uriArray, $pathArray) as $index => $item) {
-            $filteredUri = array_filter([...$uriArray], fn($i) => $i !== $item);
+            $path = $route;
+            $path = preg_replace("$pattern", "%s", $path);
+            $path = sprintf($path, ...array_values($this->args));
         }
 
-        return implode('/', $intersect) === implode('/', $filteredUri);
+
+        return $path;
     }
 
 

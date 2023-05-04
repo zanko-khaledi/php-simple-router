@@ -24,7 +24,9 @@ You can use this router like below
     
     $router->addRoute('GET','/',function(Request $request){
        echo 'Hello World';
-    })->serve();
+    });
+
+    $router->serve();
    ```
 
 Use Controller instead of callback functions
@@ -38,10 +40,13 @@ Use Controller instead of callback functions
     require __DIR__ . "/vendor/autoload.php";
 
     $router = new Router();
-    $router->addRoute('POST','/foo',[FooController::class,'store'])->serve();
+    
+    $router->addRoute('POST','/foo',[FooController::class,'store']);
+    
+    $router->serve();
   ```
 
-However you would be able to use dynamic route parameters with regex pattern
+However you would be able to use dynamic route parameters
 
    ```php
     <?php
@@ -53,11 +58,16 @@ However you would be able to use dynamic route parameters with regex pattern
 
     $router = new Router();
     
-    $router->addRoute('GET','/foo/id',function(Request $request){
+    $router->addRoute('GET','/foo/{id}',function(Request $request){
        echo $request->params()->id;
-    })->where('/foo\/[0-9]+/')->serve();
-   ```
+    });
+    
+    $router->addRoute('GET','/bar/{id}',function (Request $request){
+       echo $request->params()->id;
+    })->where('/bar\/[0-9]+/'); // regex validation for route params with where method
 
+    $router->serve();
+   ```
 You can use prefix and group methods too
 
    ```php
@@ -71,15 +81,17 @@ You can use prefix and group methods too
 
     $router = new Router();
     
-    $router->prefix('/foo')->addRoute('GET','/id',function(Request $reqeust){
+    $router->prefix('/foo')->addRoute('GET','/{id}',function(Request $reqeust){
        echo $request->params()->id;
     })->where('/foo\/[0-9]+/')->serve();
  
     $router->group('/bar',function(IRoute $router){
-        $router->addRoute('GET','/id',function(Request $request){
+        $router->addRoute('GET','/{id}',function(Request $request){
             echo $request->params()->id;
-        })->where('/bar\/[0-9]+/')->serve();
+        })->where('/bar\/[0-9]+/');
     });
+
+    $router->serve();
    ```
 
 Add router collection for modular routing
@@ -149,11 +161,13 @@ After middleware has been created you should register it on you're router
   
   $router->addRoute('GET','/',function (\ZankoKhaledi\PhpSimpleRouter\Request $request){
       echo "Root path";
-  })->serve();
+  });
   
   $router->addRoute('GET','/foo',function (\ZankoKhaledi\PhpSimpleRouter\Request $request){
      echo "Hello foo router";
-  })->middleware([AuthMiddleware::class])->serve(); 
+  })->middleware([AuthMiddleware::class]);
+
+  $router->serve();
 ```
 
 ## Testing
