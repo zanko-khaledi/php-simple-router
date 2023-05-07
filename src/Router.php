@@ -70,6 +70,7 @@ final class Router implements IRoute
                 $this->routes[$index]['middlewares'] = [...$middlewares];
             }
         }
+
         return $this;
     }
 
@@ -109,8 +110,8 @@ final class Router implements IRoute
         $this->callback = $callback;
 
         foreach ($this->routes as $index => $route) {
-            if ($this->routes[$index]['path'] === $this->path) {
-                throw new \Exception("$path added before.");
+            if ($this->routes[$index]['path'] === $this->path && $this->routes[$index]['method'] === $method) {
+                throw new \Exception("route $path added before.");
             }
         }
 
