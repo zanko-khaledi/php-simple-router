@@ -34,7 +34,7 @@ Use Controller instead of callback functions
   ```php
    <?php
 
-    use App\Controllers\FooController 
+    use App\Controllers\FooController; 
     use ZankoKhaledi\PhpSimpleRouter\Router;
 
     require __DIR__ . "/vendor/autoload.php";
