@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace ZankoKhaledi\PhpSimpleRouter;
 
+use ZankoKhaledi\PhpSimpleRouter\Interfaces\IMiddleware;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
 use ZankoKhaledi\PhpSimpleRouter\Traits\Testable;
-
 
 final class Router implements IRoute
 {
@@ -129,6 +129,7 @@ final class Router implements IRoute
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function serve()
     {
@@ -143,7 +144,9 @@ final class Router implements IRoute
     /**
      * @param string $method
      * @param callable|array $callback
+     * @param array $middlewares
      * @return void
+     * @throws \Exception
      */
     private function checkRequestMethod(string $method, callable|array $callback, array $middlewares)
     {
@@ -155,14 +158,21 @@ final class Router implements IRoute
 
     /**
      * @param array|callable $callback
+     * @param array $middlewares
      * @return void
+     * @throws \Exception
      */
     private function handleRoute(array|callable $callback, array $middlewares)
     {
         $this->request = new Request($this->args);
 
         foreach ($middlewares as $middleware) {
-            (new $middleware)->handle($this->request);
+            $instance = (new $middleware);
+            if ($instance instanceof IMiddleware) {
+                $instance->handle($this->request);
+            } else {
+                throw new \Exception("$middleware must be type of IMiddleware interface.");
+            }
         }
 
         $this->handleCallback($callback);
@@ -175,13 +185,9 @@ final class Router implements IRoute
      */
     private function handleCallback(callable|array $callback)
     {
-        if (is_callable($callback)) {
+        is_array($callback) && count($callback) === 2 ?
+            call_user_func_array([new $callback[0], $callback[1]], [$this->request]) :
             $callback($this->request);
-        }
-
-        if (is_array($callback)) {
-            call_user_func_array([new $callback[0], $callback[1]], [$this->request]);
-        }
     }
 
 
