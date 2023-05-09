@@ -68,31 +68,6 @@ However you would be able to use dynamic route parameters
 
     $router->serve();
    ```
-You can use prefix and group methods too
-
-   ```php
-   <?php
-    
-    use ZankoKhaledi\PhpSimpleRouter\Request; 
-    use ZankoKhaledi\PhpSimpleRouter\Router;
-    use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
-
-    require __DIR__ . "/vendor/autoload.php";
-
-    $router = new Router();
-    
-    $router->prefix('/foo')->addRoute('GET','/{id}',function(Request $reqeust){
-       echo $request->params()->id;
-    })->where('/foo\/[0-9]+/')->serve();
- 
-    $router->group('/bar',function(IRoute $router){
-        $router->addRoute('GET','/{id}',function(Request $request){
-            echo $request->params()->id;
-        })->where('/bar\/[0-9]+/');
-    });
-
-    $router->serve();
-   ```
 
 Add router collection for modular routing
 
@@ -127,6 +102,7 @@ You can use only this request methods to handle you're api
  ```bash 
     GET,POST,PUT,PATCH,DELETE
  ``` 
+
 ## Middleware
 
 Create a class for example AuthMiddleware that implements IMiddleware contract
@@ -148,6 +124,7 @@ Create a class for example AuthMiddleware that implements IMiddleware contract
    }
  }
 ```
+
 After middleware has been created you should register it on you're router
 
 ```php
@@ -217,8 +194,8 @@ After middleware has been created you should register it on you're router
        
    ```
 
-   You can test you're api like code block above.
-   some test api : 
+You can test you're api like code block above. some test api :
+
 ```php
   <?php
     
@@ -237,14 +214,13 @@ After middleware has been created you should register it on you're router
 
     $request->assertDelete($route,[]);
 ```        
-   
-if you familiar to PHPUnit test framework and Guzzle/Http library you could test you're api 
-without Router test api by default.
+
+if you familiar to PHPUnit test framework and Guzzle/Http library you could test you're api without Router test api by
+default.
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
 
