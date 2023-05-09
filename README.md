@@ -5,7 +5,7 @@ this light weight router library can be useful for small php web projects or bui
 ## installation
 
 ```bash
-composer require zanko-khaledi/php-simple-router:^1.0.0
+$ composer require zanko-khaledi/php-simple-router:^1.0.0
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ Use Controller instead of callback functions
   ```php
    <?php
 
-    use App\Controllers\FooController 
+    use App\Controllers\FooController; 
     use ZankoKhaledi\PhpSimpleRouter\Router;
 
     require __DIR__ . "/vendor/autoload.php";
@@ -175,7 +175,7 @@ After middleware has been created you should register it on you're router
             }
         
         
-            public function test_zanko_post()
+            public function test_foo_post_route()
             {
                 $request = Router::assertRequest($this->baseUri);
                 $response = $request->assertPost('/foo',[
