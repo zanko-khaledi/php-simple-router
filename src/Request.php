@@ -137,7 +137,7 @@ class Request implements IRequest
      */
     public function getHost()
     {
-        return $this->server()->http_host ?? parse_url($this->server()->request_uri, PHP_URL_HOST);
+        return parse_url($_SERVER['HTTP_HOST'],PHP_URL_HOST);
     }
 
     /**
