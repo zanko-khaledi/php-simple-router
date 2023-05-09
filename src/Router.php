@@ -12,9 +12,6 @@ final class Router implements IRoute
 
     use Testable;
 
-    private ?string $prefix = null;
-    private ?string $matchedUri = null;
-    private ?string $pattern = null;
     private ?string $method = 'GET';
     private mixed $callback = null;
     private array $args = [];
@@ -35,27 +32,6 @@ final class Router implements IRoute
     {
         $this->serverMode = php_sapi_name();
         $this->uri = $this->serverMode === 'cli-server' ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : null;
-    }
-
-    /**
-     * @param string $prefix
-     * @param callable $callback
-     * @return void
-     */
-    public function group(string $prefix, callable $callback)
-    {
-        $this->prefix = $prefix;
-        $callback($this);
-    }
-
-    /**
-     * @param string $prefix
-     * @return IRoute
-     */
-    public function prefix(string $prefix): IRoute
-    {
-        $this->prefix = $prefix;
-        return $this;
     }
 
 
@@ -105,7 +81,7 @@ final class Router implements IRoute
             throw new \BadMethodCallException("$method not allowed.");
         }
 
-        $this->path = $this->prefix . $path;
+        $this->path = $path;
         $this->method = $method;
         $this->callback = $callback;
 
@@ -219,8 +195,6 @@ final class Router implements IRoute
 
     public function __destruct()
     {
-        $this->prefix = null;
-        $this->pattern = null;
         $this->path = null;
         $this->args = [];
     }
