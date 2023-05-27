@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace ZankoKhaledi\PhpSimpleRouter;
 
+use Exception as ExceptionAlias;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IMiddleware;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
 use ZankoKhaledi\PhpSimpleRouter\Traits\Testable;
@@ -12,10 +13,10 @@ final class Router implements IRoute
 
     use Testable;
 
-    private ?string $method = 'GET';
+    public ?string $method = 'GET';
     private mixed $callback = null;
     private array $args = [];
-    private ?string $path = null;
+    public ?string $path = null;
     private ?string $uri = null;
     private array $validMethods = [
         'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
@@ -25,15 +26,31 @@ final class Router implements IRoute
     private ?Request $request = null;
     private ?array $routes = [];
 
+
     /**
      *
+     * @throws ExceptionAlias
      */
-    public function __construct()
+    public function __construct(?string $method = null, ?string $path = null, callable|array $callback = null, array $middleware = [], string $pattern = "")
     {
         $this->serverMode = php_sapi_name();
         $this->uri = $this->serverMode === 'cli-server' ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : null;
-    }
+        $this->method = $method ?? 'GET';
+        $this->path = $path ?? '/';
+        $this->callback = $callback;
 
+        if (!is_null($method) && !is_null($path) && !is_null($callback)) {
+
+            foreach ($this->routes as $index => $route) {
+                if ($this->routes[$index]['path'] === $this->path && $this->routes[$index]['method'] === $method) {
+                    throw new ExceptionAlias("route $path added before.");
+                }
+            }
+            $route = $this->addRoute($method, $path, $callback);
+            $pattern !== "" ? $route->middleware([...$middleware])->where($pattern) : $route->middleware([...$middleware]);
+            $route->serve();
+        }
+    }
 
     /**
      * @param array $middlewares
@@ -72,7 +89,7 @@ final class Router implements IRoute
      * @param mixed $path
      * @param callable|array $callback
      * @return IRoute
-     * @throws \Exception
+     * @throws ExceptionAlias
      */
     public function addRoute(string $method, mixed $path, callable|array $callback): IRoute
     {
@@ -82,12 +99,11 @@ final class Router implements IRoute
         }
 
         $this->path = $path;
-        $this->method = $method;
-        $this->callback = $callback;
+
 
         foreach ($this->routes as $index => $route) {
             if ($this->routes[$index]['path'] === $this->path && $this->routes[$index]['method'] === $method) {
-                throw new \Exception("route $path added before.");
+                throw new ExceptionAlias("route $path added before.");
             }
         }
 
@@ -102,12 +118,17 @@ final class Router implements IRoute
         return $this;
     }
 
+    /**
+     * @return void
+     * @throws ExceptionAlias
+     */
+
 
     /**
      * @return void
-     * @throws \Exception
+     * @throws ExceptionAlias
      */
-    public function serve()
+    public function serve(): void
     {
         foreach ($this->routes as $index => $route) {
             if ($this->handleDynamicRouteParamsAndPath($route['path']) === $this->uri && $route['valid']) {
@@ -122,9 +143,9 @@ final class Router implements IRoute
      * @param callable|array $callback
      * @param array $middlewares
      * @return void
-     * @throws \Exception
+     * @throws ExceptionAlias
      */
-    private function checkRequestMethod(string $method, callable|array $callback, array $middlewares)
+    private function checkRequestMethod(string $method, callable|array $callback, array $middlewares): void
     {
         if ($method === $_SERVER['REQUEST_METHOD'] && in_array($method, $this->validMethods)) {
             $this->handleRoute($callback, $middlewares);
@@ -136,9 +157,9 @@ final class Router implements IRoute
      * @param array|callable $callback
      * @param array $middlewares
      * @return void
-     * @throws \Exception
+     * @throws ExceptionAlias
      */
-    private function handleRoute(array|callable $callback, array $middlewares)
+    private function handleRoute(array|callable $callback, array $middlewares): void
     {
         $this->request = new Request($this->args);
 
@@ -147,7 +168,7 @@ final class Router implements IRoute
             if ($instance instanceof IMiddleware) {
                 $instance->handle($this->request);
             } else {
-                throw new \Exception("$middleware must be type of IMiddleware interface.");
+                throw new ExceptionAlias("$middleware must be type of IMiddleware interface.");
             }
         }
 
@@ -159,7 +180,7 @@ final class Router implements IRoute
      * @param callable|array $callback
      * @return void
      */
-    private function handleCallback(callable|array $callback)
+    private function handleCallback(callable|array $callback): void
     {
         is_array($callback) && count($callback) === 2 ?
             call_user_func_array([new $callback[0], $callback[1]], [$this->request]) :
@@ -195,7 +216,6 @@ final class Router implements IRoute
 
     public function __destruct()
     {
-        $this->path = null;
         $this->args = [];
     }
 }
