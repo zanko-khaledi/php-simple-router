@@ -98,7 +98,7 @@ final class Router implements IRoute
             throw new \BadMethodCallException("$method not allowed.");
         }
 
-        $this->path = $this->prefix . $path;
+        $this->path = $path;
 
 
         foreach ($this->routes as $index => $route) {
