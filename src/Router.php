@@ -16,8 +16,8 @@ final class Router implements IRoute
     public ?string $method = 'GET';
     private mixed $callback = null;
     private array $args = [];
-    public ?string $path = null;
-    private ?string $uri = null;
+    public ?string $path = '/';
+    private ?string $uri = '/';
     private array $validMethods = [
         'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
     ];
@@ -26,30 +26,39 @@ final class Router implements IRoute
     private ?Request $request = null;
     private ?array $routes = [];
 
+    private ?string $prefix = null;
+
+    private array $middlewares = [];
+
 
     /**
      *
      * @throws ExceptionAlias
      */
-    public function __construct(?string $method = null, ?string $path = null, callable|array $callback = null, array $middleware = [], string $pattern = "")
+    public function __construct()
     {
         $this->serverMode = php_sapi_name();
         $this->uri = $this->serverMode === 'cli-server' ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : null;
-        $this->method = $method ?? 'GET';
-        $this->path = $path ?? '/';
-        $this->callback = $callback;
+    }
 
-        if (!is_null($method) && !is_null($path) && !is_null($callback)) {
-
-            foreach ($this->routes as $index => $route) {
-                if ($this->routes[$index]['path'] === $this->path && $this->routes[$index]['method'] === $method) {
-                    throw new ExceptionAlias("route $path added before.");
-                }
-            }
-            $route = $this->addRoute($method, $path, $callback);
-            $pattern !== "" ? $route->middleware([...$middleware])->where($pattern) : $route->middleware([...$middleware]);
-            $route->serve();
+    /**
+     * @param array $attributes
+     * @param callable $callback
+     * @return void
+     */
+    public function group(array $attributes, callable $callback): void
+    {
+        if (array_key_exists('prefix', $attributes)) {
+            $this->prefix = $attributes['prefix'];
         }
+        if (array_key_exists('middleware', $attributes)) {
+            $this->middlewares = is_array($attributes['middleware']) && count($attributes['middleware']) ? [...$attributes['middleware']] : $attributes['middleware'];
+        }
+
+        call_user_func($callback,$this);
+
+        $this->prefix = null;
+        $this->middlewares = [];
     }
 
     /**
@@ -60,7 +69,7 @@ final class Router implements IRoute
     {
         foreach ($this->routes as $index => $route) {
             if ($this->routes[$index]['path'] === $this->path) {
-                $this->routes[$index]['middlewares'] = [...$middlewares];
+                $this->routes[$index]['middlewares'] = [...$middlewares, ...$this->middlewares];
             }
         }
 
@@ -84,6 +93,62 @@ final class Router implements IRoute
         return $this;
     }
 
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public function get(string $path, callable|array $callback): IRoute
+    {
+        return $this->addRoute('GET', $path, $callback);
+    }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public function post(string $path, callable|array $callback): IRoute
+    {
+        return $this->addRoute('POST', $path, $callback);
+    }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public function put(string $path, callable|array $callback): IRoute
+    {
+        return $this->addRoute('PUT', $path, $callback);
+    }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public function patch(string $path, callable|array $callback): IRoute
+    {
+        return $this->addRoute('PATCH', $path, $callback);
+    }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public function delete(string $path, callable|array $callback): IRoute
+    {
+        return $this->addRoute('DELETE', $path, $callback);
+    }
+
     /**
      * @param string $method
      * @param mixed $path
@@ -98,7 +163,7 @@ final class Router implements IRoute
             throw new \BadMethodCallException("$method not allowed.");
         }
 
-        $this->path = $path;
+        $this->path = $this->prefix !== null ? $this->prefix . $path : $path;
 
 
         foreach ($this->routes as $index => $route) {
@@ -111,7 +176,7 @@ final class Router implements IRoute
             'method' => $method,
             'path' => $this->path,
             'callback' => $callback,
-            'middlewares' => [],
+            'middlewares' => [...$this->middlewares],
             'valid' => true
         ];
 
@@ -203,16 +268,11 @@ final class Router implements IRoute
         $path = "";
         if (count($matches[1]) === count($uriDiff)) {
             $this->args = [...array_combine($matches[1], $uriDiff)];
-
-            $path = $route;
-            $path = preg_replace("$pattern", "%s", $path);
-            $path = sprintf($path, ...array_values($this->args));
+            $path = sprintf(preg_replace("$pattern", "%s", $route), ...array_values($this->args));
         }
-
 
         return $path;
     }
-
 
     public function __destruct()
     {
