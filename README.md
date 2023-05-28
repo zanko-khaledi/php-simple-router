@@ -147,6 +147,57 @@ After middleware has been created you should register it on you're router
   $router->serve();
 ```
 
+## Group 
+
+you can use group route binding
+
+```php
+<?php
+  use ZankoKhaledi\PhpSimpleRouter\Request; 
+  use ZankoKhaledi\PhpSimpleRouter\Router;
+  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
+
+  require __DIR__ . "/vendor/autoload.php";
+
+  $router = new Router();
+  
+  $router->group(['prefix' => '/bar'],function (IRoute $router){
+  
+      $router->addRoute('GET','/foo/{id}',function (Request $request){
+         echo $request->params()->id;
+      });
+      
+  }); 
+
+  $router->serve();
+```
+Also you would be able to bind middlewares to group method
+
+```php
+<?php
+  use ZankoKhaledi\PhpSimpleRouter\Request; 
+  use ZankoKhaledi\PhpSimpleRouter\Router;
+  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
+  use App\Middelwares\AuthMiddleware;
+  use App\Controllers\FooController;
+
+  require __DIR__ . "/vendor/autoload.php";
+
+  $router = new Router();
+  
+  $router->group(['prefix' => '/bar','middleware' => [AuthMiddleware::class]],function (IRoute $router){
+  
+      $router->addRoute('GET','/foo/{id}',function (Request $request){
+         echo $request->params()->id;
+      });
+      
+      $router->post('/foo',[FooController::class,'store']); // you can use request methods instead of addRoute method
+      
+  }); 
+
+  $router->serve();
+```
+
 ## Testing
 
    ```php
