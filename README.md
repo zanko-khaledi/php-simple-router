@@ -5,7 +5,7 @@ this light weight router library can be useful for small php web projects or bui
 ## installation
 
 ```bash
-$ composer require zanko-khaledi/php-simple-router:^1.0.0
+$ composer require zanko-khaledi/php-simple-router
 ```
 
 ## Usage
