@@ -179,7 +179,6 @@ Also you would be able to bind middlewares to group method
 <?php
   use ZankoKhaledi\PhpSimpleRouter\Request; 
   use ZankoKhaledi\PhpSimpleRouter\Router;
-  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
   use App\Middelwares\AuthMiddleware;
   use App\Controllers\FooController;
 
@@ -187,7 +186,7 @@ Also you would be able to bind middlewares to group method
 
  
   
-  Router::group(['prefix' => '/bar','middleware' => [AuthMiddleware::class]],function (IRoute $router){
+  Router::group(['prefix' => '/bar','middleware' => [AuthMiddleware::class]],function (){
   
       Router::get('/foo/{id}',function (Request $request){
          echo $request->params()->id;
