@@ -20,13 +20,15 @@ You can use this router like below
    
     require __DIR__ . "/vendor/autoload.php";
 
-    $router = new Router();
-    
-    $router->addRoute('GET','/',function(Request $request){
-       echo 'Hello World';
+    Router::get('/',function (Request $request){
+        echo "Hello World";
     });
 
-    $router->serve();
+    Router::get('/foo',function (Request $request){
+        echo "foo route";
+    });
+
+    Router::executeRoutes();
    ```
 
 Use Controller instead of callback functions
@@ -38,12 +40,13 @@ Use Controller instead of callback functions
     use ZankoKhaledi\PhpSimpleRouter\Router;
 
     require __DIR__ . "/vendor/autoload.php";
+    
+    
+    Router::get('/foo/create',[FooController::class,'create']);
+    
+    Router::post('/foo',[FooController::class,'store']);
 
-    $router = new Router();
-    
-    $router->addRoute('POST','/foo',[FooController::class,'store']);
-    
-    $router->serve();
+    Router::executeRoutes();
   ```
 
 However you would be able to use dynamic route parameters
@@ -56,19 +59,17 @@ However you would be able to use dynamic route parameters
 
     require __DIR__ . "/vendor/autoload.php";
 
-    $router = new Router();
-    
-    $router->addRoute('GET','/foo/{id}',function(Request $request){
+    Router::get('/bar/{id}',function (Request $request){
        echo $request->params()->id;
     });
     
-    $router->addRoute('GET','/bar/{id}',function (Request $request){
-       echo $request->params()->id;
-    })->where('/bar\/[0-9]+/'); // regex validation for route params with where method
+    Router::get('/foo/{file}',function (Request $request){
+       echo $request->params()->file;
+    })->where('/foo\/[a-z]+/');
 
-    $router->serve();
+    Router::executeRoutes();
    ```
-
+## Router Collection
 Add router collection for modular routing
 
    ```php
@@ -78,21 +79,30 @@ Add router collection for modular routing
 
     require __DIR__."/vendor/autoload.php"; 
 
-    $routeCollection = new RouterCollection();
-
-    try {
-
-      $routeCollection->loadRoutesFrom("./routes/*.php");
-
-    } catch (Exception $e) {
-       echo $e->getMessage();
-    }
+    
+    RouterCollection::executeRoutesFrom('./Modules/*/routes/*.php');
+     
    ```
+<header style="text-align: center;color: darkred">
+  <h3>Notice</h3>
+</header>
+If you use <code>RouterCollection</code> class for load your route files , you have to avoid call <code>Router::executeRoutes()</code>
+in your route files because this method calling once you invoke <code>executeRoutesFrom()</code> method from <code>RouterCollection</code>
+so just do like this : 
 
-Or if you want add routes separately you can do like this:
-
-   ```php
-      $routeCollection->loadRouteFrom("./routes/test.php");
+ ```php
+   <?php
+   
+    // Modules/Product/routes/product.php
+    
+    use ZankoKhaledi\PhpSimpleRouter\Router;
+    use ZankoKhaledi\PhpSimpleRouter\Request;
+    use 
+    
+    Router::get('/products',function (Request $request){
+       // your code
+    });
+     
    ```
 
 ## Request methods
@@ -131,20 +141,16 @@ After middleware has been created you should register it on you're router
 <?php
 
   use App\Middlewares\AuthMiddleware;
+  use ZankoKhaledi\PhpSimpleRouter\Router;
+  use ZankoKhaledi\PhpSimpleRouter\Request;
 
   require __DIR__ . "/vendor/autoload.php";
   
-  $router = new \ZankoKhaledi\PhpSimpleRouter\Router();
-  
-  $router->addRoute('GET','/',function (\ZankoKhaledi\PhpSimpleRouter\Request $request){
-      echo "Root path";
-  });
-  
-  $router->addRoute('GET','/foo',function (\ZankoKhaledi\PhpSimpleRouter\Request $request){
-     echo "Hello foo router";
-  })->middleware([AuthMiddleware::class]);
+  Router::get('/foo',function (Request $request){
+     // your code
+  })->middleware([AuthMiddleware::class]); 
 
-  $router->serve();
+  Router::executeRoutes();
 ```
 
 ## Group 
@@ -159,17 +165,13 @@ you can use group route binding
 
   require __DIR__ . "/vendor/autoload.php";
 
-  $router = new Router();
-  
-  $router->group(['prefix' => '/bar'],function (IRoute $router){
-  
-      $router->addRoute('GET','/foo/{id}',function (Request $request){
-         echo $request->params()->id;
-      });
-      
-  }); 
+  Router::group(['prefix' => '/foo'],function (Request $request){
+     Router::get('/bar',function (Request $request){
+        // your code
+     });
+  });
 
-  $router->serve();
+  Router::executeRoutes();
 ```
 Also you would be able to bind middlewares to group method
 
@@ -183,19 +185,19 @@ Also you would be able to bind middlewares to group method
 
   require __DIR__ . "/vendor/autoload.php";
 
-  $router = new Router();
+ 
   
-  $router->group(['prefix' => '/bar','middleware' => [AuthMiddleware::class]],function (IRoute $router){
+  Router::group(['prefix' => '/bar','middleware' => [AuthMiddleware::class]],function (IRoute $router){
   
-      $router->addRoute('GET','/foo/{id}',function (Request $request){
+      Router::get('/foo/{id}',function (Request $request){
          echo $request->params()->id;
       });
       
-      $router->post('/foo',[FooController::class,'store']); // you can use request methods instead of addRoute method
+      Router::post('/foo',[FooController::class,'store']);
       
   }); 
 
-  $router->serve();
+  Router::executeRoutes();
 ```
 
 ## Testing

@@ -24,10 +24,9 @@ final class Router implements IRoute
 
     private ?string $serverMode;
     private ?Request $request = null;
-    private ?array $routes = [];
-
+    private static ?Router $instance = null;
     private ?string $prefix = null;
-
+    private ?array $routes = [];
     private array $middlewares = [];
 
 
@@ -35,10 +34,30 @@ final class Router implements IRoute
      *
      * @throws ExceptionAlias
      */
-    public function __construct()
+    private function __construct()
     {
         $this->serverMode = php_sapi_name();
         $this->uri = $this->serverMode === 'cli-server' ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : null;
+    }
+
+    /**
+     * @return void
+     */
+    private function __clone()
+    {
+
+    }
+
+    /**
+     * create a singleton instance pattern to instantiate only one object from this class
+     * @return static|null
+     */
+    private static function getInstance(): ?static
+    {
+        if (static::$instance === null || is_null(static::$instance)) {
+            static::$instance = new static();
+        }
+        return static::$instance;
     }
 
     /**
@@ -46,20 +65,86 @@ final class Router implements IRoute
      * @param callable $callback
      * @return void
      */
-    public function group(array $attributes, callable $callback): void
+    public static function group(array $attributes, callable $callback): void
     {
         if (array_key_exists('prefix', $attributes)) {
-            $this->prefix = $attributes['prefix'];
+            static::getInstance()->prefix = $attributes['prefix'];
         }
         if (array_key_exists('middleware', $attributes)) {
-            $this->middlewares = is_array($attributes['middleware']) && count($attributes['middleware']) ? [...$attributes['middleware']] : $attributes['middleware'];
+            static::getInstance()->middlewares = is_array($attributes['middleware']) && count($attributes['middleware']) ? [...$attributes['middleware']] : $attributes['middleware'];
         }
 
-        call_user_func($callback,$this);
+        call_user_func($callback);
 
-        $this->prefix = null;
-        $this->middlewares = [];
+        static::getInstance()->prefix = null;
+        static::getInstance()->middlewares = [];
     }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public static function get(string $path, callable|array $callback): IRoute
+    {
+        return static::getInstance()->addRoute('GET', $path, $callback);
+    }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public static function post(string $path, callable|array $callback): IRoute
+    {
+        return static::getInstance()->addRoute('POST', $path, $callback);
+    }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public static function put(string $path, callable|array $callback): IRoute
+    {
+        return static::getInstance()->addRoute('PUT', $path, $callback);
+    }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public static function patch(string $path, callable|array $callback): IRoute
+    {
+        return static::getInstance()->addRoute('PATCH', $path, $callback);
+    }
+
+    /**
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public static function delete(string $path, callable|array $callback): IRoute
+    {
+        return static::getInstance()->addRoute('DELETE', $path, $callback);
+    }
+
+
+    /**
+     * @return void
+     * @throws ExceptionAlias
+     */
+    public static function executeRoutes(): void
+    {
+        static::getInstance()->serve();
+    }
+
 
     /**
      * @param array $middlewares
@@ -95,68 +180,13 @@ final class Router implements IRoute
 
 
     /**
-     * @param string $path
-     * @param callable|array $callback
-     * @return IRoute
-     * @throws ExceptionAlias
-     */
-    public function get(string $path, callable|array $callback): IRoute
-    {
-        return $this->addRoute('GET', $path, $callback);
-    }
-
-    /**
-     * @param string $path
-     * @param callable|array $callback
-     * @return IRoute
-     * @throws ExceptionAlias
-     */
-    public function post(string $path, callable|array $callback): IRoute
-    {
-        return $this->addRoute('POST', $path, $callback);
-    }
-
-    /**
-     * @param string $path
-     * @param callable|array $callback
-     * @return IRoute
-     * @throws ExceptionAlias
-     */
-    public function put(string $path, callable|array $callback): IRoute
-    {
-        return $this->addRoute('PUT', $path, $callback);
-    }
-
-    /**
-     * @param string $path
-     * @param callable|array $callback
-     * @return IRoute
-     * @throws ExceptionAlias
-     */
-    public function patch(string $path, callable|array $callback): IRoute
-    {
-        return $this->addRoute('PATCH', $path, $callback);
-    }
-
-    /**
-     * @param string $path
-     * @param callable|array $callback
-     * @return IRoute
-     * @throws ExceptionAlias
-     */
-    public function delete(string $path, callable|array $callback): IRoute
-    {
-        return $this->addRoute('DELETE', $path, $callback);
-    }
-
-    /**
      * @param string $method
      * @param mixed $path
      * @param callable|array $callback
      * @return IRoute
      * @throws ExceptionAlias
      */
-    public function addRoute(string $method, mixed $path, callable|array $callback): IRoute
+    private function addRoute(string $method, mixed $path, callable|array $callback): IRoute
     {
         if (!in_array($method, $this->validMethods)) {
             http_response_code(405);
@@ -187,13 +217,7 @@ final class Router implements IRoute
      * @return void
      * @throws ExceptionAlias
      */
-
-
-    /**
-     * @return void
-     * @throws ExceptionAlias
-     */
-    public function serve(): void
+    private function serve(): void
     {
         foreach ($this->routes as $index => $route) {
             if ($this->handleDynamicRouteParamsAndPath($route['path']) === $this->uri && $route['valid']) {
@@ -249,7 +273,7 @@ final class Router implements IRoute
     {
         is_array($callback) && count($callback) === 2 ?
             call_user_func_array([new $callback[0], $callback[1]], [$this->request]) :
-            $callback($this->request);
+            call_user_func($callback,$this->request);
     }
 
 

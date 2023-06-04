@@ -13,7 +13,7 @@ class RouterCollection implements ICollection
      * @return void
      * @throws \Exception
      */
-    public function loadRoutesFrom(string $path)
+    public static function executeRoutesFrom(string $path): void
     {
         $routes = glob($path);
         if (is_array($routes)) {
@@ -24,20 +24,8 @@ class RouterCollection implements ICollection
                     throw new \Exception("$route file doesn't exists.");
                 }
             }
-        }
-    }
 
-    /**
-     * @param string $path
-     * @return void
-     * @throws \Exception
-     */
-    public function loadRouteFrom(string $path)
-    {
-        if (file_exists($path)) {
-            require $path;
-        } else {
-            throw new \Exception("$path file doesn't exists.");
+            Router::executeRoutes();
         }
     }
 }
