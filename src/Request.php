@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace ZankoKhaledi\PhpSimpleRouter;
 
+use ZankoKhaledi\PhpSimpleRouter\Interfaces\IFormRequest;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRequest;
 
 session_start();
@@ -11,6 +12,8 @@ class Request implements IRequest
 {
     private ?object $server = null;
     private array $args = [];
+
+    public ?IFormRequest $request = null;
 
 
     /**
@@ -22,7 +25,17 @@ class Request implements IRequest
         foreach ($_SERVER as $key => $value) {
             $this->server->{strtolower($key)} = $value;
         }
+
         $this->args = $args;
+    }
+
+    /**
+     * @param IFormRequest $request
+     * @return mixed
+     */
+    public function validator(IFormRequest $request): mixed
+    {
+        return $request->validate($this);
     }
 
     /**

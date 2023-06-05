@@ -220,7 +220,7 @@ final class Router implements IRoute
     private function serve(): void
     {
         foreach ($this->routes as $index => $route) {
-            if ($this->handleDynamicRouteParamsAndPath($route['path'],$this->uri) && $route['valid']) {
+            if ($this->handleDynamicRouteParamsAndPath($route['path'], $this->uri) && $route['valid']) {
                 $this->checkRequestMethod($route['method'], $route['callback'], $route['middlewares']);
                 return;
             }
@@ -285,7 +285,7 @@ final class Router implements IRoute
      * @param string $route
      * @return bool
      */
-    private function handleDynamicRouteParamsAndPath(string $route,string $uri): bool
+    private function handleDynamicRouteParamsAndPath(string $route, string $uri): bool
     {
         $pattern = "/{(.*?)}/";
         preg_match_all($pattern, $route, $matches);
