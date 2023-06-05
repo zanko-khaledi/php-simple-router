@@ -80,6 +80,7 @@ final class Router implements IRoute
         static::getInstance()->middlewares = [];
     }
 
+
     /**
      * @param string $path
      * @param callable|array $callback
@@ -195,7 +196,6 @@ final class Router implements IRoute
 
         $this->path = $this->prefix !== null ? $this->prefix . $path : $path;
 
-
         foreach ($this->routes as $index => $route) {
             if ($this->routes[$index]['path'] === $this->path && $this->routes[$index]['method'] === $method) {
                 throw new ExceptionAlias("route $path added before.");
@@ -220,10 +220,14 @@ final class Router implements IRoute
     private function serve(): void
     {
         foreach ($this->routes as $index => $route) {
-            if ($this->handleDynamicRouteParamsAndPath($route['path']) === $this->uri && $route['valid']) {
+            if ($this->handleDynamicRouteParamsAndPath($route['path'],$this->uri) && $route['valid']) {
                 $this->checkRequestMethod($route['method'], $route['callback'], $route['middlewares']);
+                return;
             }
         }
+
+        header('Location:/route-not-found');
+        exit();
     }
 
 
@@ -273,15 +277,15 @@ final class Router implements IRoute
     {
         is_array($callback) && count($callback) === 2 ?
             call_user_func_array([new $callback[0], $callback[1]], [$this->request]) :
-            call_user_func($callback,$this->request);
+            call_user_func($callback, $this->request);
     }
 
 
     /**
      * @param string $route
-     * @return string
+     * @return bool
      */
-    private function handleDynamicRouteParamsAndPath(string $route): string
+    private function handleDynamicRouteParamsAndPath(string $route,string $uri): bool
     {
         $pattern = "/{(.*?)}/";
         preg_match_all($pattern, $route, $matches);
@@ -295,7 +299,7 @@ final class Router implements IRoute
             $path = sprintf(preg_replace("$pattern", "%s", $route), ...array_values($this->args));
         }
 
-        return $path;
+        return $path === $uri;
     }
 
     public function __destruct()
