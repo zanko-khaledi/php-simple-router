@@ -24,6 +24,7 @@ final class Router implements IRoute
 
     private ?string $serverMode;
     private ?Request $request = null;
+    private ?HTTPResponse $response = null;
     private static ?Router $instance = null;
     private ?string $prefix = null;
     private ?array $routes = [];
@@ -220,29 +221,14 @@ final class Router implements IRoute
     private function serve(): void
     {
         foreach ($this->routes as $index => $route) {
-            if ($this->handleDynamicRouteParamsAndPath($route['path'], $this->uri) && $route['valid']) {
-                $this->checkRequestMethod($route['method'], $route['callback'], $route['middlewares']);
+            if ($this->handleDynamicRouteParamsAndPath($route['path'], $this->uri) && $route['method'] === $_SERVER['REQUEST_METHOD'] && $route['valid']) {
+                $this->handleRoute($route['callback'], $route['middlewares']);
                 return;
             }
         }
 
         header('Location:/route-not-found');
         exit();
-    }
-
-
-    /**
-     * @param string $method
-     * @param callable|array $callback
-     * @param array $middlewares
-     * @return void
-     * @throws ExceptionAlias
-     */
-    private function checkRequestMethod(string $method, callable|array $callback, array $middlewares): void
-    {
-        if ($method === $_SERVER['REQUEST_METHOD'] && in_array($method, $this->validMethods)) {
-            $this->handleRoute($callback, $middlewares);
-        }
     }
 
 
@@ -275,7 +261,7 @@ final class Router implements IRoute
      */
     private function handleCallback(callable|array $callback): void
     {
-        is_array($callback) && count($callback) === 2 ?
+        is_array($callback) ?
             call_user_func_array([new $callback[0], $callback[1]], [$this->request]) :
             call_user_func($callback, $this->request);
     }

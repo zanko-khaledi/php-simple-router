@@ -31,7 +31,7 @@ class Request implements IRequest
 
     /**
      * @param IFormRequest $request
-     * @return mixed
+     * @return bool
      */
     public function validator(IFormRequest $request): mixed
     {
@@ -103,9 +103,9 @@ class Request implements IRequest
 
     /**
      * @param string $key
-     * @return bool|string
+     * @return string
      */
-    public function input(string $key): bool|string
+    public function input(string $key): string
     {
         return json_decode(file_get_contents("php://input"), false)->{$key} ?? '';
     }
@@ -200,5 +200,13 @@ class Request implements IRequest
     public function __debugInfo(): ?array
     {
         return (array)$this->server;
+    }
+
+    private function checkValidation($key,$props):bool
+    {
+        if($this->input($key)){
+            return $this->input($key) === null ? false : true;
+        }
+        return true;
     }
 }
