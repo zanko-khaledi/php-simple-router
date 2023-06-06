@@ -201,12 +201,4 @@ class Request implements IRequest
     {
         return (array)$this->server;
     }
-
-    private function checkValidation($key,$props):bool
-    {
-        if($this->input($key)){
-            return $this->input($key) === null ? false : true;
-        }
-        return true;
-    }
 }
