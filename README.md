@@ -97,7 +97,6 @@ so just do like this :
     
     use ZankoKhaledi\PhpSimpleRouter\Router;
     use ZankoKhaledi\PhpSimpleRouter\Request;
-    use 
     
     Router::get('/products',function (Request $request){
        // your code
