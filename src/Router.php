@@ -31,6 +31,13 @@ final class Router implements IRoute
     private array $middlewares = [];
 
 
+    const GET = 'GET';
+    const POST = 'POST';
+    const PUT = 'PUT';
+    const PATCH = 'PATCH';
+    const DELETE = 'DELETE';
+
+
     /**
      *
      * @throws ExceptionAlias
@@ -135,6 +142,23 @@ final class Router implements IRoute
     public static function delete(string $path, callable|array $callback): IRoute
     {
         return static::getInstance()->addRoute('DELETE', $path, $callback);
+    }
+
+
+    /**
+     * @param array $methods
+     * @param string $path
+     * @param callable|array $callback
+     * @return IRoute
+     * @throws ExceptionAlias
+     */
+    public static function match(array $methods, string $path, callable|array $callback): IRoute
+    {
+        foreach ($methods as $method) {
+            static::getInstance()->addRoute($method, $path, $callback);
+        }
+
+        return static::getInstance();
     }
 
 
