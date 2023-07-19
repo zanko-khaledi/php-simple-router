@@ -105,9 +105,15 @@ class Request implements IRequest
      * @param string $key
      * @return string
      */
-    public function input(string $key): string
+    public function input(string $key): string|null
     {
-        return json_decode(file_get_contents("php://input"), false)->{$key} ?? '';
+        if (array_key_exists($key, $_POST)) {
+            return $_POST[$key] ?? null;
+        }
+        if (array_key_exists($key, $_GET)) {
+            return $_GET[$key] ?? null;
+        }
+        return json_decode(file_get_contents("php://input"), false)?->{$key};
     }
 
     /**
@@ -150,7 +156,7 @@ class Request implements IRequest
      */
     public function getHost()
     {
-        return parse_url($_SERVER['HTTP_HOST'],PHP_URL_HOST);
+        return parse_url($_SERVER['HTTP_HOST'], PHP_URL_HOST);
     }
 
     /**
@@ -175,7 +181,7 @@ class Request implements IRequest
      */
     public function session(string $key = null): mixed
     {
-        if(!isset($_SESSION[$key])){
+        if (!isset($_SESSION[$key])) {
             return null;
         }
         return $_SESSION[$key];
@@ -187,7 +193,7 @@ class Request implements IRequest
      */
     public function cookie(string $key = null): mixed
     {
-        if(!isset($_COOKIE[$key])){
+        if (!isset($_COOKIE[$key])) {
             return null;
         }
         return $_COOKIE[$key];
