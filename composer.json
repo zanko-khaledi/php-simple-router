@@ -3,7 +3,7 @@
   "license": "MIT",
   "require": {
     "php": ">= 8.1",
-    "guzzlehttp/guzzle": "7.0",
+    "guzzlehttp/guzzle": "^7.0",
     "phpunit/phpunit" : "9.*"
   },
   "keywords": [
@@ -15,8 +15,12 @@
   ],
   "autoload": {
     "psr-4": {
-      "ZankoKhaledi\\PhpSimpleRouter\\": "src/"
-    }
+      "ZankoKhaledi\\PhpSimpleRouter\\": "src/",
+      "App\\" : "App/"
+    },
+    "files": [
+      "config/app.php"
+    ]
   },
   "authors": [
     {

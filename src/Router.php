@@ -161,7 +161,6 @@ final class Router implements IRoute
         return static::getInstance();
     }
 
-
     /**
      * @return void
      * @throws ExceptionAlias
@@ -250,6 +249,7 @@ final class Router implements IRoute
                 return;
             }
         }
+
 
         header('Location:/route-not-found');
         exit();
