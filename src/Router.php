@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace ZankoKhaledi\PhpSimpleRouter;
 
+
+use Dotenv\Dotenv;
 use Exception as ExceptionAlias;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IMiddleware;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
@@ -29,6 +31,7 @@ final class Router implements IRoute
     private ?string $prefix = null;
     private ?array $routes = [];
     private array $middlewares = [];
+    private ?string $host = null;
 
 
     const GET = 'GET';
@@ -37,6 +40,7 @@ final class Router implements IRoute
     const PATCH = 'PATCH';
     const DELETE = 'DELETE';
 
+    const  HOSTNAME = 'localhost';
 
     /**
      *
@@ -44,8 +48,12 @@ final class Router implements IRoute
      */
     private function __construct()
     {
+        $env = Dotenv::createImmutable(dirname(__DIR__));
+        $env->load();
+
         $this->serverMode = php_sapi_name();
         $this->uri = $this->serverMode === 'cli-server' ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : null;
+        $this->host = $_ENV['HOSTNAME'] ?? static::HOSTNAME;
     }
 
     /**
@@ -66,26 +74,6 @@ final class Router implements IRoute
             static::$instance = new static();
         }
         return static::$instance;
-    }
-
-    /**
-     * @param array $attributes
-     * @param callable $callback
-     * @return void
-     */
-    public static function group(array $attributes, callable $callback): void
-    {
-        if (array_key_exists('prefix', $attributes)) {
-            static::getInstance()->prefix = $attributes['prefix'];
-        }
-        if (array_key_exists('middleware', $attributes)) {
-            static::getInstance()->middlewares = is_array($attributes['middleware']) && count($attributes['middleware']) ? [...$attributes['middleware']] : $attributes['middleware'];
-        }
-
-        call_user_func($callback);
-
-        static::getInstance()->prefix = null;
-        static::getInstance()->middlewares = [];
     }
 
 
@@ -178,7 +166,7 @@ final class Router implements IRoute
     public function middleware(array $middlewares): IRoute
     {
         foreach ($this->routes as $index => $route) {
-            if ($this->routes[$index]['path'] === $this->path) {
+            if ($route['domain'] . $route['path'] === $this->host . $this->path) {
                 $this->routes[$index]['middlewares'] = [...$middlewares, ...$this->middlewares];
             }
         }
@@ -195,12 +183,37 @@ final class Router implements IRoute
         preg_match($pattern, $this->uri, $matches);
 
         foreach ($this->routes as $index => $route) {
-            if ($route['path'] === $this->path) {
+            if ($route['domain'] . $route['path'] === $this->host . $this->path) {
                 $this->routes[$index]['valid'] = count($matches) > 0;
             }
         }
 
         return $this;
+    }
+
+
+    /**
+     * @param array $attributes
+     * @param callable $callback
+     * @return void
+     */
+    public static function group(array $attributes, callable $callback): void
+    {
+        if (array_key_exists('prefix', $attributes)) {
+            static::getInstance()->prefix = $attributes['prefix'];
+        }
+        if (array_key_exists('middleware', $attributes)) {
+            static::getInstance()->middlewares = is_array($attributes['middleware']) && count($attributes['middleware']) ? [...$attributes['middleware']] : $attributes['middleware'];
+        }
+        if (array_key_exists('domain', $attributes)) {
+            static::getInstance()->host = $attributes['domain'];
+        }
+
+        call_user_func($callback);
+
+        static::getInstance()->prefix = null;
+        static::getInstance()->middlewares = [];
+        static::getInstance()->host = $_ENV['HOSTNAME'] ?? static::HOSTNAME;
     }
 
 
@@ -221,7 +234,7 @@ final class Router implements IRoute
         $this->path = $this->prefix !== null ? $this->prefix . $path : $path;
 
         foreach ($this->routes as $index => $route) {
-            if ($this->routes[$index]['path'] === $this->path && $this->routes[$index]['method'] === $method) {
+            if ($route['domain'] . $route['path'] === $this->host . $this->path && $route['method'] === $method) {
                 throw new ExceptionAlias("route $path added before.");
             }
         }
@@ -231,7 +244,8 @@ final class Router implements IRoute
             'path' => $this->path,
             'callback' => $callback,
             'middlewares' => [...$this->middlewares],
-            'valid' => true
+            'valid' => true,
+            'domain' => $this->host
         ];
 
         return $this;
@@ -244,12 +258,16 @@ final class Router implements IRoute
     private function serve(): void
     {
         foreach ($this->routes as $index => $route) {
-            if ($this->handleDynamicRouteParamsAndPath($route['path'], $this->uri) && $route['method'] === $_SERVER['REQUEST_METHOD'] && $route['valid']) {
-                $this->handleRoute($route['callback'], $route['middlewares']);
-                return;
+            if ($this->handleDynamicRouteParamsAndPath($route['path'], $this->uri) &&
+                $route['method'] === $_SERVER['REQUEST_METHOD'] &&
+                $route['valid']
+            ) {
+                if ($this->checkDomain($route['domain'])) {
+                    $this->handleRoute($route['callback'], $route['middlewares']);
+                    return;
+                }
             }
         }
-
 
         header('Location:/route-not-found');
         exit();
@@ -269,13 +287,14 @@ final class Router implements IRoute
         foreach ($middlewares as $middleware) {
             $instance = (new $middleware);
             if ($instance instanceof IMiddleware) {
-                $instance->handle($this->request);
+                $instance->handle($this->request, fn(Request $request) => $this->handleCallback($callback, $request));
+                return;
             } else {
                 throw new ExceptionAlias("$middleware must be type of IMiddleware interface.");
             }
         }
 
-        $this->handleCallback($callback);
+        $this->handleCallback($callback, $this->request);
     }
 
 
@@ -283,16 +302,25 @@ final class Router implements IRoute
      * @param callable|array $callback
      * @return void
      */
-    private function handleCallback(callable|array $callback): void
+    private function handleCallback(callable|array $callback, Request $request): void
     {
         is_array($callback) ?
-            call_user_func_array([new $callback[0], $callback[1]], [$this->request]) :
-            call_user_func($callback, $this->request);
+            call_user_func_array([new $callback[0], $callback[1]], [$request]) :
+            call_user_func($callback, $request);
     }
 
+    /**
+     * @param string $domain
+     * @return bool
+     */
+    private function checkDomain(string $domain): bool
+    {
+        return $domain === parse_url($_SERVER['HTTP_HOST'], PHP_URL_HOST);
+    }
 
     /**
      * @param string $route
+     * @param string $uri
      * @return bool
      */
     private function handleDynamicRouteParamsAndPath(string $route, string $uri): bool

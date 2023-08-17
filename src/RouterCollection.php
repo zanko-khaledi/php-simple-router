@@ -24,7 +24,6 @@ class RouterCollection implements ICollection
                     throw new \Exception("$route file doesn't exists.");
                 }
             }
-
             Router::executeRoutes();
         }
     }
