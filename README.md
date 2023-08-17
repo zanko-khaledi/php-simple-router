@@ -227,6 +227,32 @@ file on root of you're project for example
 HOSTNAME = mysite.local
 
 ```
+after setting <code>HOSTNAME</code> variable in <code>.env</code>
+file you must to add this line of code inside of <code>index.php</code> file in root of your project
+or in public directory
+```php
+
+  use ZankoKhaledi\PhpSimpleRouter\Request; 
+  use ZankoKhaledi\PhpSimpleRouter\Router;
+  use ZankoKhaledi\PhpSimpleRouter\RouterCollection;
+  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
+  use App\Middelwares\AuthMiddleware;
+
+  require __DIR__ . "/vendor/autoload.php";
+  
+  Router::loadConfigs(__DIR__); // this method called for loading .env variables
+  
+  Router::group([
+  'domain' => 'subdomain.mysite.local'
+  ,'prefix' => '/bar'
+  ,'middleware' => [AuthMiddleware::class]]
+  ,function (IRoute $router){
+     // code  
+  }); 
+
+  Router::executeRoutes();
+
+```
 ## Testing
 
    ```php
