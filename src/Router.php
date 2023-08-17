@@ -48,9 +48,6 @@ final class Router implements IRoute
      */
     private function __construct()
     {
-        $env = Dotenv::createImmutable(dirname(__DIR__));
-        $env->load();
-
         $this->serverMode = php_sapi_name();
         $this->uri = $this->serverMode === 'cli-server' ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : null;
         $this->host = $_ENV['HOSTNAME'] ?? static::HOSTNAME;
@@ -147,6 +144,13 @@ final class Router implements IRoute
         }
 
         return static::getInstance();
+    }
+
+    public static function loadConfigs(?string $dir = null):void
+    {
+        $env = Dotenv::createImmutable($dir);
+        $env->safeLoad();
+        $env->required('HOSTNAME');
     }
 
     /**
