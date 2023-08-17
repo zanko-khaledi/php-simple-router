@@ -124,12 +124,13 @@ Create a class for example AuthMiddleware that implements IMiddleware contract
   
  class AuthMiddleware implements IMiddleware
  {
-   public function handle(IRequest $request)
+   public function handle(IRequest $request,Callable $next)
    {
      if(!isset($_SESSION['admin']) && $_SESSION['admin'] !== 'zanko'){
            header("Location:/");
            exit();
      }
+     $next($request);
    }
  }
 ```
@@ -198,6 +199,34 @@ Also you would be able to bind middlewares to group method
   Router::executeRoutes();
 ```
 
+You can also use subdomains in <code>group</code> method like block code below
+```php
+  use ZankoKhaledi\PhpSimpleRouter\Request; 
+  use ZankoKhaledi\PhpSimpleRouter\Router;
+  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
+  use App\Middelwares\AuthMiddleware;
+
+  require __DIR__ . "/vendor/autoload.php";
+
+
+  Router::group([
+  'domain' => 'example.local'
+  ,'prefix' => '/bar'
+  ,'middleware' => [AuthMiddleware::class]]
+  ,function (IRoute $router){
+     // code  
+  }); 
+
+  Router::executeRoutes();
+
+```
+By default you're host name is localhost you would be able to change it in <code>.env</code>
+file on root of you're project for example 
+```.dotenv
+
+HOSTNAME = mysite.local
+
+```
 ## Testing
 
    ```php
