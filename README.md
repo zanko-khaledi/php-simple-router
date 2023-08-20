@@ -203,7 +203,6 @@ You can also use subdomains in <code>group</code> method like block code below
 ```php
   use ZankoKhaledi\PhpSimpleRouter\Request; 
   use ZankoKhaledi\PhpSimpleRouter\Router;
-  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
   use App\Middelwares\AuthMiddleware;
 
   require __DIR__ . "/vendor/autoload.php";
@@ -213,7 +212,7 @@ You can also use subdomains in <code>group</code> method like block code below
   'domain' => 'example.local'
   ,'prefix' => '/bar'
   ,'middleware' => [AuthMiddleware::class]]
-  ,function (IRoute $router){
+  ,function (){
      // code  
   }); 
 
@@ -235,7 +234,6 @@ or in public directory
   use ZankoKhaledi\PhpSimpleRouter\Request; 
   use ZankoKhaledi\PhpSimpleRouter\Router;
   use ZankoKhaledi\PhpSimpleRouter\RouterCollection;
-  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
   use App\Middelwares\AuthMiddleware;
 
   require __DIR__ . "/vendor/autoload.php";
@@ -246,7 +244,7 @@ or in public directory
   'domain' => 'subdomain.mysite.local'
   ,'prefix' => '/bar'
   ,'middleware' => [AuthMiddleware::class]]
-  ,function (IRoute $router){
+  ,function (){
      // code  
   }); 
 
