@@ -16,12 +16,8 @@
   ],
   "autoload": {
     "psr-4": {
-      "ZankoKhaledi\\PhpSimpleRouter\\": "src/",
-      "App\\" : "App/"
-    },
-    "files": [
-      "config/app.php"
-    ]
+      "ZankoKhaledi\\PhpSimpleRouter\\": "src/"
+    }
   },
   "authors": [
     {
