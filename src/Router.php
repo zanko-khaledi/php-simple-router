@@ -146,6 +146,10 @@ final class Router implements IRoute
         return static::getInstance();
     }
 
+    /**
+     * @param string|null $dir
+     * @return void
+     */
     public static function loadConfigs(?string $dir = null):void
     {
         $env = Dotenv::createImmutable($dir);

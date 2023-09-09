@@ -5,6 +5,7 @@ namespace ZankoKhaledi\PhpSimpleRouter;
 
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IFormRequest;
 use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRequest;
+use ZankoKhaledi\PhpSimpleRouter\Interfaces\IUpload;
 
 session_start();
 
@@ -12,9 +13,9 @@ class Request implements IRequest
 {
     private ?object $server = null;
     private array $args = [];
-
     public ?IFormRequest $request = null;
-
+    private array $file = [];
+    private array $errors = [];
 
     /**
      * @param array $args
@@ -197,6 +198,59 @@ class Request implements IRequest
             return null;
         }
         return $_COOKIE[$key];
+    }
+
+
+    /**
+     * @param string|null $name
+     * @param array $type
+     * @param int|null $size
+     * @return IUpload
+     * @throws \Exception
+     */
+    public function file(?string $name, array $type = [], ?int $size = null): array|IUpload
+    {
+        $this->file = $_FILES[$name];
+        $file = $this->file;
+
+        if ($file['error'] === 0) {
+            if (count($type) > 0) {
+                if (!in_array($file['type'], $type)) {
+                    $this->errors['file'] = ["file type must be included in (" . implode(',', $type) . ")"];
+                }
+            }
+            if (!is_null($size)) {
+                $fileSize = number_format($file['size'] / 1024, 0, '.', ',') . 'KB';
+                $size = number_format($size / 1024, 0, '.', ',') . 'KB';
+                if ((int)$file['size'] > $size) {
+                    $this->errors['file'] = ["file size is greater then $size !"];
+                }
+            }
+        } else {
+            throw new \Exception('You have an error!');
+        }
+
+        return $this;
+    }
+
+    public function move(string $path, ?string $name = null): mixed
+    {
+        if (isset($this->errors['file']) && count($this->errors['file'])) {
+            return $this->errors['file'];
+        }
+
+        $uploadedFile = $this->file['tmp_name'];
+        if (!is_dir($path)) {
+            mkdir($path, 755);
+        }
+        $fileName = null;
+        if (!is_null($name)) {
+            $fileInfo = new \SplFileInfo($this->file['name']);
+            $fileName = $name . '.' . $fileInfo->getExtension();
+        }
+        $destinationPath = !is_null($name) ? $path . $fileName : $path . $this->file['name'];
+
+        return move_uploaded_file($uploadedFile, $destinationPath);
     }
 
 

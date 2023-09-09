@@ -2,7 +2,7 @@
 
 namespace ZankoKhaledi\PhpSimpleRouter\Interfaces;
 
-interface IRequest
+interface IRequest extends IUpload
 {
     public function server();
 
