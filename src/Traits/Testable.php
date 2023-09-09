@@ -33,7 +33,7 @@ trait Testable
      */
     public static function assertRequest(string $baseUri): static
     {
-        $instance = (new static());
+        $instance = self::getInstance();
         $instance->http = new Client([
             "base_uri" => $baseUri
         ]);
