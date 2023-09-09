@@ -97,7 +97,6 @@ so just do like this :
     
     use ZankoKhaledi\PhpSimpleRouter\Router;
     use ZankoKhaledi\PhpSimpleRouter\Request;
-    use 
     
     Router::get('/products',function (Request $request){
        // your code
@@ -180,7 +179,6 @@ Also you would be able to bind middlewares to group method
 <?php
   use ZankoKhaledi\PhpSimpleRouter\Request; 
   use ZankoKhaledi\PhpSimpleRouter\Router;
-  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
   use App\Middelwares\AuthMiddleware;
   use App\Controllers\FooController;
 
@@ -188,7 +186,7 @@ Also you would be able to bind middlewares to group method
 
  
   
-  Router::group(['prefix' => '/bar','middleware' => [AuthMiddleware::class]],function (IRoute $router){
+  Router::group(['prefix' => '/bar','middleware' => [AuthMiddleware::class]],function (){
   
       Router::get('/foo/{id}',function (Request $request){
          echo $request->params()->id;
@@ -205,7 +203,6 @@ You can also use subdomains in <code>group</code> method like block code below
 ```php
   use ZankoKhaledi\PhpSimpleRouter\Request; 
   use ZankoKhaledi\PhpSimpleRouter\Router;
-  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
   use App\Middelwares\AuthMiddleware;
 
   require __DIR__ . "/vendor/autoload.php";
@@ -215,7 +212,7 @@ You can also use subdomains in <code>group</code> method like block code below
   'domain' => 'example.local'
   ,'prefix' => '/bar'
   ,'middleware' => [AuthMiddleware::class]]
-  ,function (IRoute $router){
+  ,function (){
      // code  
   }); 
 
@@ -237,7 +234,6 @@ or in public directory
   use ZankoKhaledi\PhpSimpleRouter\Request; 
   use ZankoKhaledi\PhpSimpleRouter\Router;
   use ZankoKhaledi\PhpSimpleRouter\RouterCollection;
-  use ZankoKhaledi\PhpSimpleRouter\Interfaces\IRoute;
   use App\Middelwares\AuthMiddleware;
 
   require __DIR__ . "/vendor/autoload.php";
@@ -248,7 +244,7 @@ or in public directory
   'domain' => 'subdomain.mysite.local'
   ,'prefix' => '/bar'
   ,'middleware' => [AuthMiddleware::class]]
-  ,function (IRoute $router){
+  ,function (){
      // code  
   }); 
 
